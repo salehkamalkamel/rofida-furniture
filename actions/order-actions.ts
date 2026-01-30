@@ -14,6 +14,7 @@ import {
 } from "@/db/schema";
 import { getAddressById } from "./address-actions";
 import { revalidatePath } from "next/cache";
+import EmailTemplate from "@/components/email-template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 type CreateOrderResult = {
@@ -66,18 +67,21 @@ export async function createOrder(
       // 7️⃣ Clear user's cart
       await clearUserCart(tx, userCart.id);
 
+      const { data, error } = await resend.emails.send({
+        from: "روفيدا للاثاث <delivered@saleh-kamal.blog>",
+        to: orderDetails.email,
+        subject: `تأكيد طلبك رقم #${orderDetails.id}`,
+        react: EmailTemplate({ username: session.user.name }),
+      });
+      if (error) {
+        console.error(error);
+      }
+
+      console.log(data);
+
       // 8️⃣ Revalidate paths
       revalidatePath("/orders");
       revalidatePath("/cart");
-      if (orderDetails && orderDetails.email) {
-        await resend.emails.send({
-          from: "Your Store <onboarding@resend.dev>", // أو ايميل الدومين الخاص بك
-          to: orderDetails.email,
-          subject: `تأكيد طلبك رقم #${orderDetails.id}`,
-          html: `<p>شكراً لطلبك! إجمالي المبلغ: ${orderDetails.total} ج.م</p>`,
-          // نصيحة: استخدم React Email لاحقاً لتصميم احترافي
-        });
-      }
 
       return { success: true, orderId: newOrder.id };
     });

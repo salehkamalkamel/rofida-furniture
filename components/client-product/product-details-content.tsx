@@ -313,7 +313,7 @@ export default function ProductDetailContent({
                   >
                     -
                   </button>
-                  <span className="flex-1 text-center font-black text-xl">
+                  <span className="flex-1 text-center font-black text-xl px-6">
                     {quantity}
                   </span>
                   <button
@@ -326,7 +326,7 @@ export default function ProductDetailContent({
                 <button
                   onClick={handleAddToCart}
                   disabled={!isAvailable || isPending}
-                  className="flex-1 bg-foreground text-background h-14 md:h-16 font-black uppercase tracking-[0.2em] hover:bg-primary transition-colors flex items-center justify-center gap-3 disabled:opacity-20"
+                  className=" w-full bg-foreground text-background h-14 md:h-16 font-black uppercase tracking-[0.2em] hover:bg-primary transition-colors flex items-center justify-center gap-3 disabled:opacity-20"
                 >
                   {isPending
                     ? "جاري المعالجة..."

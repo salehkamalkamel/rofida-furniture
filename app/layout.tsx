@@ -1,13 +1,13 @@
-import React from "react";
+import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import { CartProvider } from "@/context/cart-context";
-import { WishlistProvider } from "@/context/wishlist-context";
+
 import { Toaster } from "@/components/ui/sonner";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import HeaderSkeleton from "@/components/skeleton/header-skeleton";
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
@@ -49,10 +49,11 @@ export default function RootLayout({
       <body
         className={`${ibmPlexArabic.className} antialiased bg-background text-foreground`}
       >
-        <Header />
-        <CartProvider>
-          <WishlistProvider>{children}</WishlistProvider>
-        </CartProvider>
+        <Suspense fallback={<HeaderSkeleton />}>
+          <Header />
+        </Suspense>
+
+        {children}
         <Analytics />
         <Toaster />
         <Footer />

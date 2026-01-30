@@ -6,8 +6,9 @@ import Link from "next/link";
 import { Product } from "@/db/schema";
 import { addToCart, removeFromCart } from "@/actions/cart-actions";
 import { toast } from "sonner";
-import { BaggageClaim, Check, Heart, Loader, Plus, Trash2 } from "lucide-react";
+import { Heart, Loader, Plus, Trash2 } from "lucide-react";
 import { toggleWishlist } from "@/actions/wishlist-actions";
+import { calculatePrice } from "@/lib/pricing";
 
 export default function ProductCardContent({
   product,
@@ -20,11 +21,11 @@ export default function ProductCardContent({
 }) {
   const [isPendingCart, startCartTransition] = useTransition();
   const [isPendingWishlist, startWishlistTransition] = useTransition();
-
-  const basePrice = Number(product.price);
-  const salePrice = product.salePrice ? Number(product.salePrice) : null;
-  const currentPrice = product.isOnOffer && salePrice ? salePrice : basePrice;
-  const originalPrice = product.isOnOffer && salePrice ? basePrice : null;
+  const priceDetails = calculatePrice(product, 1, false);
+  const basePrice = priceDetails.basePrice;
+  const salePrice = priceDetails.finalUnitPrice;
+  const currentPrice = salePrice;
+  const originalPrice = basePrice;
   const mainImage = product.images?.[0] || "/placeholder.svg";
 
   const handleToggleCart = (e: React.MouseEvent) => {
