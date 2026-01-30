@@ -1,0 +1,272 @@
+"use server";
+import { Resend } from "resend";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import db from "..";
+import { eq } from "drizzle-orm";
+import {
+  cartItems, // The table object (keep for clearUserCart)
+  carts,
+  orderItems,
+  orders,
+  products, // Import this for type inference
+  type CartItem, // Use 'type' keyword for clarity
+} from "@/db/schema";
+import { getAddressById } from "./address-actions";
+import { revalidatePath } from "next/cache";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+type CreateOrderResult = {
+  success: boolean;
+  orderId?: number;
+  error?: string;
+};
+
+// custom errors
+class UnauthorizedError extends Error {}
+class NotFoundError extends Error {}
+class EmptyCartError extends Error {}
+export async function createOrder(
+  addressId: number,
+): Promise<CreateOrderResult> {
+  try {
+    // 1️⃣ Authenticate user
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) throw new UnauthorizedError("برجاء تسجيل الدخول");
+    let orderDetails: any = null;
+    return await db.transaction(async (tx) => {
+      // 2️⃣ Resolve shipping address snapshot
+      const shippingSnapshot = await getAddressById(addressId);
+      // 3️⃣ Fetch user's cart
+      const userCart = await getUserCart(tx, session.user.id);
+      if (!userCart.items.length)
+        throw new EmptyCartError("Your cart is empty");
+      // 4️⃣ Prepare order items & calculate totals
+      const { preparedItems, totalAmount } = prepareOrderItems(userCart.items);
+      // 5️⃣ Create order
+      const newOrder = await createOrderRecord(
+        tx,
+        session.user.id,
+        shippingSnapshot,
+        totalAmount,
+      );
+
+      orderDetails = {
+        id: newOrder.id,
+        email: session.user.email,
+        total: totalAmount,
+      };
+
+      // 6️⃣ Insert order items
+      await tx
+        .insert(orderItems)
+        .values(
+          preparedItems.map((item) => ({ ...item, orderId: newOrder.id })),
+        );
+      // 7️⃣ Clear user's cart
+      await clearUserCart(tx, userCart.id);
+
+      // 8️⃣ Revalidate paths
+      revalidatePath("/orders");
+      revalidatePath("/cart");
+      if (orderDetails && orderDetails.email) {
+        await resend.emails.send({
+          from: "Your Store <onboarding@resend.dev>", // أو ايميل الدومين الخاص بك
+          to: orderDetails.email,
+          subject: `تأكيد طلبك رقم #${orderDetails.id}`,
+          html: `<p>شكراً لطلبك! إجمالي المبلغ: ${orderDetails.total} ج.م</p>`,
+          // نصيحة: استخدم React Email لاحقاً لتصميم احترافي
+        });
+      }
+
+      return { success: true, orderId: newOrder.id };
+    });
+  } catch (error: any) {
+    if (
+      error instanceof UnauthorizedError ||
+      error instanceof NotFoundError ||
+      error instanceof EmptyCartError
+    ) {
+      return { success: false, error: error.message };
+    }
+    console.error("CreateOrder error:", error);
+    return { success: false, error: "حدث خطاء برجاء المحاولة في وقت لاحق" };
+  }
+}
+
+/* =========================
+   HELPER FUNCTIONS
+========================= */
+
+async function getUserCart(tx: any, userId: string) {
+  return await tx.query.carts.findFirst({
+    where: eq(carts.userId, userId),
+    with: { items: { with: { product: true } } },
+  });
+}
+
+// Define a type that represents a CartItem + the joined Product
+type CartItemWithProduct = CartItem & {
+  product: typeof products.$inferSelect;
+};
+
+function prepareOrderItems(items: CartItemWithProduct[]): {
+  preparedItems: any[];
+  totalAmount: number;
+} {
+  let totalAmount = 0;
+  const preparedItems = items.map((item) => {
+    const price = item.product.salePrice
+      ? Math.round(Number(item.product.salePrice))
+      : Math.round(Number(item.product.price));
+
+    const lineTotal = Math.round(
+      (price + Number(item.customizationPrice)) * item.quantity,
+    );
+    totalAmount += lineTotal;
+
+    return {
+      productId: item.productId,
+      productName: item.product.name,
+      productImage: (item.product.images as string[])[0],
+      price: price.toString(),
+      quantity: item.quantity,
+      selectedColor: item.selectedColor,
+      customizationText: item.customizationText,
+    };
+  });
+
+  return {
+    preparedItems,
+    totalAmount: Math.round(Number(totalAmount.toFixed(2))),
+  };
+}
+
+async function createOrderRecord(
+  tx: any,
+  userId: string,
+  shippingSnapshot: any,
+  totalAmount: number,
+) {
+  const [newOrder] = await tx
+    .insert(orders)
+    .values({
+      userId,
+      totalAmount,
+      shippingAddress: shippingSnapshot,
+      status: "pending",
+      paymentStatus: "pending",
+    })
+    .returning();
+  return newOrder;
+}
+
+async function clearUserCart(tx: any, cartId: number) {
+  await tx.delete(cartItems).where(eq(cartItems.cartId, cartId));
+}
+
+export async function getOrderById(orderId: number) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) return null;
+
+  const order = await db.query.orders.findFirst({
+    where: eq(orders.id, orderId),
+    with: {
+      items: true,
+      user: true,
+    },
+  });
+
+  // Security check: Only allow the owner to see the success page
+  if (!order || order.userId !== session.user.id) return null;
+
+  return order;
+}
+
+// @/actions/order-actions.ts
+export async function getMyOrders() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) throw new Error("Unauthorized");
+
+  return await db.query.orders.findMany({
+    where: eq(orders.userId, session.user.id),
+    with: {
+      items: true,
+    },
+    orderBy: (orders, { desc }) => [desc(orders.createdAt)],
+  });
+}
+
+export async function cancelOrder(orderId: number) {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) throw new Error("Unauthorized");
+
+    const result = await db.transaction(async (tx) => {
+      const existingOrder = await tx.query.orders.findFirst({
+        where: eq(orders.id, orderId),
+      });
+
+      if (!existingOrder) throw new Error("Order not found");
+      if (existingOrder.userId !== session.user.id)
+        throw new Error("Forbidden");
+
+      if (existingOrder.status !== "pending") {
+        throw new Error(
+          "Cannot cancel an order that is already being processed or shipped",
+        );
+      }
+
+      await tx
+        .update(orders)
+        .set({ status: "cancelled", updatedAt: new Date() })
+        .where(eq(orders.id, orderId));
+
+      return { success: true };
+    });
+
+    revalidatePath("/orders");
+    return result;
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to cancel order" };
+  }
+}
+type OrderStatus =
+  | "pending"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
+type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
+
+export async function updateOrderStatus(
+  orderId: number,
+  newStatus: OrderStatus,
+  newPaymentStatus?: PaymentStatus,
+) {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    // 1. Role-based Security: Only Admins allowed
+    if (!session?.user || session.user.role !== "admin") {
+      throw new Error("Unauthorized: Admin access required");
+    }
+
+    await db
+      .update(orders)
+      .set({
+        status: newStatus,
+        ...(newPaymentStatus && { paymentStatus: newPaymentStatus }),
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, orderId));
+
+    revalidatePath("/admin/orders"); // Assuming your admin route
+    revalidatePath(`/orders/${orderId}`);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Update Order Error:", error);
+    return { success: false, error: error.message || "Failed to update order" };
+  }
+}
