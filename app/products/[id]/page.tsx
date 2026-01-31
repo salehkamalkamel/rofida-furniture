@@ -3,7 +3,12 @@ import { isProductInWishlist } from "@/actions/wishlist-actions";
 import { getProductById } from "@/app/dashboard/products/new/_actions";
 import ProductDetailContent from "@/components/client-product/product-details-content";
 import ProductsSection from "@/components/products-section";
+import db from "@/index";
 
+// export async function generateStaticParams() {
+//   const products = await db.query.products.findMany();
+//   return products.map((product) => ({ id: String(product.id) }));
+// }
 export default async function ProductDetailPage({
   params,
 }: {
