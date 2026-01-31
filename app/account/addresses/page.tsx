@@ -6,12 +6,21 @@ import {
   Phone,
   MessageSquare,
   ShieldCheck,
-  Trash2,
   Edit3,
 } from "lucide-react";
 import DeleteAddressButton from "@/components/delete-address-button";
+import { Suspense } from "react";
+import AddressesPageSkeleton from "@/components/skeleton/addresses-page-skeleton";
 
 export default async function AddressesPage() {
+  return (
+    <Suspense fallback={<AddressesPageSkeleton />}>
+      <AddressPageLayout />
+    </Suspense>
+  );
+}
+
+async function AddressPageLayout() {
   const userAddresses = await getUserAddresses();
 
   return (

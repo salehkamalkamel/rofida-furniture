@@ -76,9 +76,10 @@ export default function Footer() {
             <h4 className="text-xs font-black uppercase tracking-[0.3em] text-primary mb-8">
               Categories
             </h4>
+            {/* Section 3: Categories */}
             <ul className="space-y-4">
               {["غرفة المعيشة", "غرفة النوم", "غرفة الطعام", "المكتب"].map(
-                (item) => (
+                (item, index) => (
                   <li key={item}>
                     <Link
                       href="#"
@@ -86,7 +87,7 @@ export default function Footer() {
                     >
                       {item}
                       <span className="text-[10px] opacity-20 font-mono">
-                        [0{Math.floor(Math.random() * 9)}]
+                        [0{index + 1}]
                       </span>
                     </Link>
                   </li>

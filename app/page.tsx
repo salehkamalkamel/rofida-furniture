@@ -2,6 +2,8 @@ import HeroCarousel from "@/components/hero-carousel";
 import CategoriesSection from "@/components/categories-section";
 import ProductsSection from "@/components/products-section";
 import SectionDivider from "@/components/section-divider";
+import { Suspense } from "react";
+import ProductsSectionSkeleton from "@/components/skeleton/products-section-skeleton";
 
 export default function HomePage() {
   return (
@@ -27,18 +29,22 @@ export default function HomePage() {
 
         {/* CATEGORY DIRECTORY */}
         <section className="py-12 sm:py-20">
-          <CategoriesSection />
+          <Suspense fallback={<ProductsSectionSkeleton />}>
+            <CategoriesSection />
+          </Suspense>
         </section>
 
         <SectionDivider />
 
         {/* BEST SELLERS LEDGER */}
         <section className="py-12 sm:py-20 bg-muted/5">
-          <ProductsSection
-            title="الأكثر مبيعاً"
-            label="new_arrival"
-            viewAllLink="/products?label=best_seller"
-          />
+          <Suspense fallback={<ProductsSectionSkeleton />}>
+            <ProductsSection
+              title="الأكثر مبيعاً"
+              label="new_arrival"
+              viewAllLink="/products?label=best_seller"
+            />
+          </Suspense>
         </section>
 
         <SectionDivider />
@@ -46,23 +52,27 @@ export default function HomePage() {
         {/* SPECIAL OFFERS (Treated as 'Flash_Manifest') */}
         <section className="py-12 sm:py-20">
           <div className="absolute left-0 right-0 h-full w-full bg-primary/5 -skew-y-2 pointer-events-none" />
-          <ProductsSection
-            title="عروض خاصة"
-            label="new_arrival"
-            limit={8}
-            viewAllLink="/products?label=on_sale"
-          />
+          <Suspense fallback={<ProductsSectionSkeleton />}>
+            <ProductsSection
+              title="عروض خاصة"
+              label="new_arrival"
+              limit={8}
+              viewAllLink="/products?label=on_sale"
+            />
+          </Suspense>
         </section>
 
         <SectionDivider />
 
         {/* NEW ARRIVALS (Treated as 'New_Registry') */}
         <section className="py-12 sm:py-20">
-          <ProductsSection
-            title="وصل حديثاً"
-            label="new_arrival"
-            viewAllLink="/products?label=new"
-          />
+          <Suspense fallback={<ProductsSectionSkeleton />}>
+            <ProductsSection
+              title="وصل حديثاً"
+              label="new_arrival"
+              viewAllLink="/products?label=new"
+            />
+          </Suspense>
         </section>
 
         {/* FINAL SYSTEM INTERRUPT */}

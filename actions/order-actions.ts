@@ -187,7 +187,6 @@ export async function getOrderById(orderId: number) {
   return order;
 }
 
-// @/actions/order-actions.ts
 export async function getMyOrders() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) throw new Error("Unauthorized");

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getOrderById } from "@/actions/order-actions";
 import { notFound } from "next/navigation";
-import { Check, Package, MapPin, CreditCard, ChevronLeft } from "lucide-react";
+import { Check, Package, MapPin, CreditCard } from "lucide-react";
 
 type Props = {
   searchParams: Promise<{ orderId?: string }>;
