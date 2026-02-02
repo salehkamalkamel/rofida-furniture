@@ -49,14 +49,9 @@ export default function RootLayout({
       <body
         className={`${ibmPlexArabic.className} antialiased bg-background text-foreground`}
       >
-        <Suspense fallback={<HeaderSkeleton />}>
-          <Header />
-        </Suspense>
-
         {children}
         <Analytics />
         <Toaster />
-        <Footer />
       </body>
     </html>
   );

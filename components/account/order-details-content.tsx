@@ -5,6 +5,7 @@ import { X, RefreshCcw, Download } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getOrderById } from "@/actions/order-actions";
 import CancelOrderButton from "@/components/order/cancel-order-btn";
+import { DownloadPDFButton } from "../pdf-bill-btn";
 
 export default async function OrderDetailsContent({
   orderId,
@@ -156,13 +157,12 @@ export default async function OrderDetailsContent({
             </span>
           </div>
 
-          <div className="pt-4">
-            {canCancel ? (
-              <CancelOrderButton orderId={order.id} />
-            ) : (
-              <button className="w-full h-11 bg-foreground text-background font-bold text-sm flex items-center justify-center gap-2">
-                <RefreshCcw className="w-4 h-4" /> إعادة طلب
-              </button>
+          <div className="pt-4 flex flex-col items-center gap-4">
+            {canCancel && (
+              <>
+                <CancelOrderButton orderId={order.id} />
+                {/* <DownloadPDFButton orderId={Number(orderId)} /> */}
+              </>
             )}
           </div>
         </div>

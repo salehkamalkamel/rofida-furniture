@@ -1,5 +1,5 @@
 "use server";
-
+import { isDynamicUsageError } from "next/dist/export/helpers/is-dynamic-usage-error";
 import { auth } from "@/lib/auth";
 import { wishlists, wishlistItems } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -118,6 +118,7 @@ export async function toggleWishlist(productId: number) {
       await db
         .delete(wishlistItems)
         .where(eq(wishlistItems.id, existingItem.id));
+      revalidatePath("/");
       revalidatePath("/wishlist");
       revalidatePath("/products"); // Update heart icons on product lists
       return { success: true, action: "removed" };
@@ -127,6 +128,8 @@ export async function toggleWishlist(productId: number) {
         wishlistId: wishlist.id,
         productId,
       });
+      revalidatePath("/");
+
       revalidatePath("/wishlist");
       revalidatePath("/products");
       return { success: true, action: "added" };
@@ -140,10 +143,15 @@ export async function toggleWishlist(productId: number) {
 export async function getWishlist() {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) return null;
+
+    // Pattern Match: Return consistent empty state if no user
+    if (!session?.user) {
+      return { success: false, wishlistItems: [] };
+    }
+
     const userId = session.user.id;
 
-    const wishlist = await db.query.wishlists.findFirst({
+    const wishlistData = await db.query.wishlists.findFirst({
       where: eq(wishlists.userId, userId),
       with: {
         items: {
@@ -153,13 +161,23 @@ export async function getWishlist() {
         },
       },
     });
-    return { success: true, wishlist };
+
+    // Pattern Match: Return success true but empty array if no wishlist exists yet
+    if (!wishlistData || !wishlistData.items) {
+      return { success: true, wishlistItems: [] };
+    }
+
+    return {
+      success: true,
+      wishlistItems: wishlistData.items,
+    };
   } catch (error) {
-    console.error("Get Wishlist Error:", error);
-    return { success: false, error: "Something went wrong" };
+    // Standardized Error Logging
+    console.error("GET_WISHLIST_ERROR:", error);
+
+    return { success: false, wishlistItems: [] };
   }
 }
-
 // check if a product is in the user's wishlist
 export async function isProductInWishlist(productId: number) {
   try {

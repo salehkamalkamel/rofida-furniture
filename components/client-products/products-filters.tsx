@@ -1,9 +1,9 @@
 "use client";
 
 import { categories } from "@/lib/data";
-import { Loader2, Search, SlidersHorizontal, X, ArrowLeft } from "lucide-react";
+import { Loader2, Search, SlidersHorizontal, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition, useCallback, useMemo } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 export default function ClientProductsFilters({
@@ -15,23 +15,29 @@ export default function ClientProductsFilters({
   const pathname = usePathname();
   const { replace } = useRouter();
   const [isPending, startTransition] = useTransition();
-  const urlQuery = searchParams.get("search")?.toString() || "";
-  const [query, setQuery] = useState(urlQuery);
+
+  const [query, setQuery] = useState(
+    searchParams.get("search")?.toString() || "",
+  );
   const currentCategory = searchParams.get("category")?.toString() || "all";
 
-  useEffect(() => {
-    setQuery(urlQuery);
-  }, [urlQuery]);
+  const updateParams = useCallback(
+    (key: string, value: string) => {
+      const params = new URLSearchParams(searchParams);
+      if (value && value !== "all") {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
 
-  const updateParams = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (value && value !== "all") params.set(key, value);
-    else params.delete(key);
+      if (key !== "page") params.delete("page");
 
-    startTransition(() => {
-      replace(`${pathname}?${params.toString()}`, { scroll: false });
-    });
-  };
+      startTransition(() => {
+        replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, pathname, replace],
+  );
 
   const handleSearch = useDebouncedCallback((val: string) => {
     updateParams("search", val);
@@ -44,11 +50,20 @@ export default function ClientProductsFilters({
     });
   };
 
+  const categoryOptions = useMemo(
+    () =>
+      categories.map((cat) => (
+        <option key={cat.id} value={cat.id}>
+          {cat.name}
+        </option>
+      )),
+    [],
+  );
+
   return (
     <div className="sticky top-0 z-30 bg-background border-b-2 border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          {/* Header Section */}
           <div className="shrink-0">
             <h1 className="text-3xl font-black text-foreground tracking-tighter uppercase leading-none">
               المتجر
@@ -57,15 +72,10 @@ export default function ClientProductsFilters({
               <span className="bg-secondary text-secondary-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                 {productsLength} منتج
               </span>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
-                متوفر الآن
-              </p>
             </div>
           </div>
 
-          {/* Controls Section */}
           <div className="flex flex-col sm:flex-row items-stretch gap-0 flex-1 max-w-3xl">
-            {/* Search Input - Sharp Edges, High Contrast */}
             <div className="relative flex-1 group">
               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground group-focus-within:text-primary transition-colors">
                 {isPending ? (
@@ -85,7 +95,6 @@ export default function ClientProductsFilters({
               />
             </div>
 
-            {/* Category Select - Matches Search Bar Style */}
             <div className="relative w-full sm:w-56">
               <select
                 value={currentCategory}
@@ -93,11 +102,7 @@ export default function ClientProductsFilters({
                 className="w-full h-14 px-4 bg-background border border-border border-r-0 rounded-none outline-none text-sm font-bold appearance-none cursor-pointer focus:border-primary transition-all pr-10"
               >
                 <option value="all">كل الفئات</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
+                {categoryOptions}
               </select>
               <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2 border-r pr-2 border-border">
                 <SlidersHorizontal
@@ -107,12 +112,10 @@ export default function ClientProductsFilters({
               </div>
             </div>
 
-            {/* Clear Button - Bold Action */}
             {(query || currentCategory !== "all") && (
               <button
                 onClick={clearFilters}
                 className="h-14 px-6 bg-destructive text-white flex items-center justify-center hover:opacity-90 transition-all font-bold uppercase text-xs"
-                title="مسح"
               >
                 <X className="w-5 h-5" strokeWidth={3} />
               </button>

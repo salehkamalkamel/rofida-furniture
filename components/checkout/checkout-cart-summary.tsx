@@ -128,7 +128,7 @@ export default function CheckoutCartSummary({
       {/* FOOTER ACTION */}
       <div className="p-4 border-t-2 border-foreground bg-muted/5 flex justify-between items-center">
         <Link
-          href="/products"
+          href="/cart"
           className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 hover:text-primary transition-colors"
         >
           <ArrowLeft className="w-3 h-3" />

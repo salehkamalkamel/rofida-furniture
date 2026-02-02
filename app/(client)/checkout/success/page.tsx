@@ -182,7 +182,9 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
                     Subtotal
                   </span>
                   <span className="font-mono">
-                    {Number(order.totalAmount).toLocaleString("ar-EG")}{" "}
+                    {Math.round(Number(order.totalAmount)).toLocaleString(
+                      "ar-EG",
+                    )}{" "}
                     {order.currency}
                   </span>
                 </div>
@@ -191,7 +193,9 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
                     Grand Total
                   </span>
                   <span className="text-3xl font-black tracking-tighter leading-none">
-                    {Number(order.totalAmount).toLocaleString("ar-EG")}
+                    {Math.round(Number(order.totalAmount)).toLocaleString(
+                      "ar-EG",
+                    )}
                     <span className="text-xs ml-1 font-bold opacity-40 tracking-normal">
                       {order.currency}
                     </span>

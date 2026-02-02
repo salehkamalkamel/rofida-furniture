@@ -24,10 +24,10 @@ export default function CancelOrderButton({ orderId }: { orderId: number }) {
     <button
       onClick={handleCancel}
       disabled={isPending}
-      className="h-11 px-6 bg-destructive text-destructive-foreground font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50"
+      className="h-11 w-full   bg-destructive text-destructive-foreground font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-center disabled:opacity-50"
     >
+      <X className="w-4 h-4 ml-2" />
       {isPending ? "جاري الإلغاء..." : "إلغاء الطلب"}
-      <X className="w-4 h-4" />
     </button>
   );
 }

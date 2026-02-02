@@ -6,8 +6,6 @@ import { Product } from "@/db/schema";
 export default function ProductsContent({ products }: { products: Product[] }) {
   return (
     <main className="flex-1 bg-background">
-      {/* --- Header & Filters --- */}
-      {/* Wrapped in a border to separate the 'Control Area' from the 'Display Area' */}
       <div className="border-b border-foreground/10 bg-muted/30">
         <ClientProductsFilters productsLength={products.length || 0} />
       </div>
@@ -16,23 +14,18 @@ export default function ProductsContent({ products }: { products: Product[] }) {
       <div className="max-w-360 mx-auto border-x border-foreground/10 min-h-screen">
         <div className={`transition-all duration-500`}>
           {products.length > 0 ? (
-            /* Industrial Trick: gap-px with a background color 
-               creates a perfect 1px technical grid line between items.
-            */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-foreground/10 border-b border-foreground/10">
               {products.map((product, index) => (
                 <div
                   key={product.id}
                   className="bg-background group relative p-4 md:p-6 hover:z-10 transition-all duration-300"
                 >
-                  {/* Subtle Technical Indexing */}
                   <span className="absolute top-2 right-4 text-[10px] font-mono opacity-20 group-hover:opacity-100 transition-opacity">
                     REF_{String(index + 1).padStart(3, "0")}
                   </span>
 
                   <ProductCard product={product} />
 
-                  {/* Visual Accent: Corner bracket on hover */}
                   <div className="absolute bottom-0 left-0 w-4 h-4 border-l border-b border-primary opacity-0 group-hover:opacity-100 transition-all" />
                 </div>
               ))}

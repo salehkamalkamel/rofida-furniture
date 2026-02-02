@@ -20,7 +20,7 @@ export default function ProductsLoadingSkeleton() {
 
             {/* Search/Select Skeleton */}
             <div className="flex flex-col sm:flex-row items-stretch gap-0 flex-1 lg:max-w-2xl">
-              <div className="relative flex-1 h-12 border border-border bg-muted/10 rounded-t-md sm:rounded-t-none sm:rounded-r-md">
+              <div className="relative hidden md:flex flex-1 h-12 border border-border bg-muted/10 rounded-t-md sm:rounded-t-none sm:rounded-r-md">
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-10" />
               </div>
               <div className="relative w-full sm:w-48 h-12 border border-t-0 sm:border-t sm:border-r-0 border-border bg-muted/10 flex items-center px-4 justify-between rounded-b-md sm:rounded-b-none sm:rounded-l-md">

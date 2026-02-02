@@ -4,7 +4,7 @@ import React, { useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/db/schema";
-import { addToCart, removeFromCart } from "@/actions/cart-actions";
+import { addToCart } from "@/actions/cart-actions";
 import { toast } from "sonner";
 import { Heart, Loader, Plus, Trash2 } from "lucide-react";
 import { toggleWishlist } from "@/actions/wishlist-actions";
@@ -33,8 +33,8 @@ export default function ProductCardContent({
     e.stopPropagation();
     startCartTransition(async () => {
       if (isInCart) {
-        const result = await removeFromCart(product.id);
-        if (result.success) toast.success("تمت الإزالة من السلة");
+        toast.success("العنصر موجود في السلة");
+        return;
       } else {
         const result = await addToCart({
           productId: product.id,
@@ -158,13 +158,15 @@ export default function ProductCardContent({
       <div className="border-t border-border">
         <button
           onClick={handleToggleCart}
-          disabled={product.stockStatus === "out_of_stock" || isPendingCart}
+          disabled={
+            product.stockStatus === "out_of_stock" || isPendingCart || isInCart
+          }
           className={`w-full flex items-center justify-center gap-3 py-4 text-sm font-bold transition-all uppercase tracking-widest
             ${
               product.stockStatus === "out_of_stock"
                 ? "bg-muted text-muted-foreground cursor-not-allowed"
                 : isInCart
-                  ? "bg-foreground text-background hover:bg-foreground/90"
+                  ? "bg-foreground text-background hover:bg-foreground/90 cursor-not-allowed"
                   : "bg-secondary text-secondary-foreground hover:bg-secondary/90"
             }`}
         >
@@ -172,8 +174,7 @@ export default function ProductCardContent({
             <Loader className="w-5 h-5 animate-spin" />
           ) : isInCart ? (
             <>
-              <Trash2 className="w-4 h-4" />
-              <span>إزالة من السلة</span>
+              <span>المنتج موجود في السلة</span>
             </>
           ) : (
             <>

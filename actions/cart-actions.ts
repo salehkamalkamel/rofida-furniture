@@ -155,7 +155,7 @@ export async function updateCartItemQuantity(
   }
 }
 
-export async function removeFromCart(productId: number) {
+export async function removeFromCart(itemId: number) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return { success: false };
 
@@ -167,9 +167,7 @@ export async function removeFromCart(productId: number) {
 
   await db
     .delete(cartItems)
-    .where(
-      and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)),
-    );
+    .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.id, itemId)));
 
   revalidatePath("/cart");
   revalidatePath("/products");

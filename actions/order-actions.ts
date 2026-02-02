@@ -15,6 +15,9 @@ import {
 import { getAddressById } from "./address-actions";
 import { revalidatePath } from "next/cache";
 import EmailTemplate from "@/components/email-template";
+import { renderToBuffer } from "@react-pdf/renderer";
+import React, { createElement } from "react";
+import { BillTemplate } from "@/components/pdf/bill-template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 type CreateOrderResult = {
@@ -272,4 +275,70 @@ export async function updateOrderStatus(
     console.error("Update Order Error:", error);
     return { success: false, error: error.message || "Failed to update order" };
   }
+}
+
+export async function getAllOrders() {
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session?.user || session.user.role !== "admin") {
+    throw new Error("Unauthorized: Access denied. Admin role required.");
+  }
+
+  try {
+    const allOrders = await db.query.orders.findMany({
+      with: {
+        user: true,
+        items: true,
+      },
+      orderBy: (orders, { desc }) => [desc(orders.createdAt)],
+    });
+
+    return allOrders;
+  } catch (error) {
+    console.error("Error fetching admin orders:", error);
+    throw new Error("Failed to fetch orders");
+  }
+}
+
+export async function getAdminOrderById(orderId: number) {
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session?.user || session.user.role !== "admin") {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
+  const order = await db.query.orders.findFirst({
+    where: eq(orders.id, orderId),
+    with: {
+      items: true,
+      user: true,
+    },
+  });
+
+  return order;
+}
+
+export async function generateInvoiceAction(orderId: number) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const order = await db.query.orders.findFirst({
+    where: eq(orders.id, orderId),
+    with: {
+      items: true,
+    },
+  });
+
+  if (!order || order.userId !== session.user.id) {
+    throw new Error("Forbidden");
+  }
+
+  const element = React.createElement(BillTemplate, {
+    order,
+    items: order.items,
+  });
+
+  const buffer = await renderToBuffer(element as any);
+
+  return buffer.toString("base64");
 }

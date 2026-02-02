@@ -31,9 +31,9 @@ export default function CartPageContent({
   const [isPendingQuantity, startTransitionQuantity] = useTransition();
   const [isPendingDelete, startTransitionDelete] = useTransition();
 
-  const handleDelete = (productId: number) => {
+  const handleDelete = (itemId: number) => {
     startTransitionDelete(async () => {
-      const res = await removeFromCart(productId);
+      const res = await removeFromCart(itemId);
       if (!res.success) toast.error("فشل حذف المنتج");
     });
   };
@@ -105,7 +105,7 @@ export default function CartPageContent({
 
                     <button
                       disabled={isPendingQuantity || isPendingDelete}
-                      onClick={() => handleDelete(item.product.id)}
+                      onClick={() => handleDelete(item.id)}
                       className="text-muted-foreground hover:text-destructive transition-colors p-2 border border-transparent hover:border-destructive/20"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -175,7 +175,7 @@ export default function CartPageContent({
           <div className="space-y-4 mb-8">
             <div className="flex justify-between items-end border-b border-foreground/5 pb-2">
               <span className="text-[10px] font-black uppercase opacity-40">
-                Gross Total
+                الإجمالي{" "}
               </span>
               <span className="font-mono font-bold">
                 {summary.subtotal.toLocaleString("ar-EG")}{" "}
@@ -185,7 +185,7 @@ export default function CartPageContent({
 
             <div className="flex justify-between items-end border-b border-foreground/5 pb-2">
               <span className="text-[10px] font-black uppercase opacity-40">
-                Logistic Fee
+                مصاريف الشحن{" "}
               </span>
               <span
                 className={`font-mono font-bold ${
@@ -239,7 +239,7 @@ export default function CartPageContent({
               className="group relative w-full h-20 bg-foreground text-background overflow-hidden transition-all hover:bg-primary disabled:opacity-50"
             >
               <div className="relative z-10 flex items-center justify-center gap-4 text-sm font-black uppercase tracking-[0.2em]">
-                {isPendingQuantity ? "Processing..." : "Secure Checkout"}
+                {isPendingQuantity ? "Processing..." : "اتمام الطلب"}
                 <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-2" />
               </div>
               <div className="absolute inset-0 flex items-center justify-center text-4xl font-black opacity-5 pointer-events-none select-none">
@@ -253,13 +253,13 @@ export default function CartPageContent({
             <div className="flex items-center gap-4 text-muted-foreground group">
               <ShieldCheck className="w-5 h-5 group-hover:text-primary transition-colors" />
               <span className="text-[10px] font-black uppercase tracking-widest italic">
-                100% Encrypted Payment
+                دفع أمن عند استلام الطلب.{" "}
               </span>
             </div>
             <div className="flex items-center gap-4 text-muted-foreground group">
               <RotateCcw className="w-5 h-5 group-hover:text-primary transition-colors" />
               <span className="text-[10px] font-black uppercase tracking-widest italic">
-                14 Day Design Guarantee
+                ضمان 14 يوم علي عيوب التصنيع.
               </span>
             </div>
           </div>

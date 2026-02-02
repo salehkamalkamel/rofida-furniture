@@ -5,9 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/db/schema";
 import {
-  Heart,
-  Minus,
-  Plus,
   ShoppingBag,
   Truck,
   Ruler,
@@ -15,29 +12,23 @@ import {
   Edit3,
   Check,
   Info,
-  Loader,
 } from "lucide-react";
 import { addToCart } from "@/actions/cart-actions";
 import { toast } from "sonner";
-import { toggleWishlist } from "@/actions/wishlist-actions";
 import { calculatePrice } from "@/lib/pricing";
+import { WishlistButton } from "../wishlist-btn";
 
 interface ProductDetailContentProps {
   product: Product;
   similarProducts: Product[];
-  isInWishlist: boolean;
-  isInCart: boolean;
 }
 
 export default function ProductDetailContent({
   product,
   similarProducts,
-  isInWishlist,
-  isInCart,
 }: ProductDetailContentProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isPending, startTransition] = useTransition();
-  const [isPendingWishlist, startWishlistTransition] = useTransition();
   const [selectedColor, setSelectedColor] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showCustomization, setShowCustomization] = useState(false);
@@ -72,23 +63,6 @@ export default function ProductDetailContent({
     });
   };
 
-  const handleToggleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    startWishlistTransition(async () => {
-      const result = await toggleWishlist(product.id);
-      if (result.success) {
-        toast.success(
-          result.action === "added"
-            ? "تمت الإضافة إلى المفضلة"
-            : "تمت الإزالة من المفضلة",
-        );
-      } else {
-        toast.error(result.error || "حدث خطأ ما");
-      }
-    });
-  };
-
   if (!product) return null;
 
   return (
@@ -105,7 +79,7 @@ export default function ProductDetailContent({
               href="/products"
               className="hover:text-primary transition-colors"
             >
-              الكتالوج
+              المنتجات
             </Link>
             <span className="opacity-20">/</span>
             <span className="text-primary truncate max-w-37.5 md:max-w-none">
@@ -172,23 +146,7 @@ export default function ProductDetailContent({
                   {product.name}
                 </h1>
               </div>
-              <button
-                disabled={isPendingWishlist}
-                onClick={handleToggleWishlist}
-                className={`p-3 md:p-4 border-2 transition-all shrink-0 ${
-                  isInWishlist
-                    ? "bg-primary border-primary text-white"
-                    : "border-foreground/10 hover:border-foreground"
-                }`}
-              >
-                {isPendingWishlist ? (
-                  <Loader className="w-6 h-6 animate-spin" />
-                ) : (
-                  <Heart
-                    className={`w-6 h-6 ${isInWishlist ? "fill-current" : ""}`}
-                  />
-                )}
-              </button>
+              <WishlistButton productId={product.id} />
             </div>
 
             <p className="mt-6 text-base md:text-lg text-muted-foreground leading-relaxed font-medium">
@@ -388,7 +346,10 @@ export default function ProductDetailContent({
                           {key}
                         </span>
                         <span className="font-bold font-mono">
-                          {val} {product.measurements?.unit}
+                          {val}{" "}
+                          {key === "weight"
+                            ? "KG"
+                            : product.measurements?.unit.toUpperCase()}
                         </span>
                       </div>
                     ),

@@ -142,7 +142,7 @@ export default async function OrdersLayout() {
             </div>
 
             {/* ACTION COMMANDS */}
-            <OrderCtrl orderId={order.id} />
+            <OrderCtrl orderId={order.id} orderStatus={order.status} />
           </div>
         ))}
       </div>
