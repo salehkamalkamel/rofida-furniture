@@ -1,5 +1,6 @@
 import { getUserAddresses } from "@/actions/address-actions";
 import { getFullCart } from "@/actions/cart-actions";
+import getAllShippingRules from "@/actions/shipping-actions";
 import CheckoutClientLayout from "@/components/checkout/checkout-client-layout";
 import { auth } from "@/lib/auth";
 import { calculateCheckoutPricing } from "@/lib/helpers/checkout";
@@ -108,12 +109,14 @@ export default async function CheckoutLayout() {
 
   const addresses = await getUserAddresses();
   const pricing = calculateCheckoutPricing(cart);
+  const shippingRules = await getAllShippingRules();
 
   return (
     <CheckoutClientLayout
       cartData={cart}
       addresses={addresses}
       pricing={pricing}
+      shippingRules={shippingRules}
     />
   );
 }

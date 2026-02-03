@@ -16,6 +16,7 @@ import CheckoutConfirmationTab from "./checkout-confirmation-tab";
 
 // Icons
 import { ShoppingBag, MapPin, CreditCard, ShieldCheck } from "lucide-react";
+import { ShippingRules } from "@/actions/shipping-actions";
 
 export const steps: {
   key: CheckoutStep;
@@ -36,18 +37,23 @@ interface CheckoutProps {
   cartData: FullCartResult;
   addresses: Address[];
   pricing: CheckoutPricing;
+  shippingRules: ShippingRules;
 }
 
 export default function CheckoutClientLayout({
   cartData,
   addresses,
   pricing,
+  shippingRules,
 }: CheckoutProps) {
   // --- State ---
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("cart");
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
     addresses[0]?.id || null,
+  );
+  const [currentShippingRule, setCurrentShippingRule] = useState<number | null>(
+    addresses[0]?.shippingRuleId || null,
   );
 
   // --- Derived State ---
@@ -69,15 +75,16 @@ export default function CheckoutClientLayout({
       case "cart":
         return !!(cartData.success && cartData.items.length > 0);
       case "shipping":
-        return !!selectedAddressId;
+        return !!(selectedAddressId && currentShippingRule);
       case "payment":
-        return !!selectedAddressId; // Payment currently just needs a valid address context
+        return !!(selectedAddressId && currentShippingRule);
       default:
         return true;
     }
   };
 
   const handleNext = () => {
+    console.log("Selected shipping rule ID:", currentShippingRule);
     if (!validateStep()) return;
 
     const sequence: CheckoutStep[] = [
@@ -129,8 +136,10 @@ export default function CheckoutClientLayout({
 
                 {currentStep === "shipping" && (
                   <CheckoutAddress
+                    shippingRules={shippingRules}
                     onAddNewAddress={() => setShowNewAddressForm(true)}
                     closeNewAddressForm={() => setShowNewAddressForm(false)}
+                    setCurrentShippingRule={setCurrentShippingRule}
                     handleSelectAddress={setSelectedAddressId}
                     savedAddresses={addresses}
                     selectedAddressId={selectedAddressId}
@@ -140,9 +149,14 @@ export default function CheckoutClientLayout({
 
                 {currentStep === "payment" && <CheckoutPaymentTab />}
 
-                {currentStep === "confirmation" && selectedAddress && (
-                  <CheckoutConfirmationTab address={selectedAddress} />
-                )}
+                {currentStep === "confirmation" &&
+                  selectedAddress &&
+                  currentShippingRule && (
+                    <CheckoutConfirmationTab
+                      address={selectedAddress}
+                      currentShippingRule={currentShippingRule}
+                    />
+                  )}
               </div>
             </div>
 

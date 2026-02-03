@@ -4,10 +4,13 @@ import { Check, MapPin, Phone, User } from "lucide-react";
 export default function SavedAddressList({
   addresses,
   selectedAddressId,
+  setCurrentShippingRule,
   handleSelectAddress,
 }: {
   addresses: Address[];
   selectedAddressId: number | null;
+  setCurrentShippingRule: (value: number | null) => void;
+
   handleSelectAddress: (addressId: number) => void;
 }) {
   return (
@@ -27,7 +30,10 @@ export default function SavedAddressList({
           return (
             <label
               key={address.id}
-              onClick={() => handleSelectAddress(address.id)}
+              onClick={() => {
+                setCurrentShippingRule(address.shippingRuleId);
+                handleSelectAddress(address.id);
+              }}
               className={`
                 relative flex items-start gap-4 p-5 border-2 cursor-pointer transition-all duration-200
                 ${

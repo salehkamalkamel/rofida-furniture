@@ -277,11 +277,18 @@ export const orders = pgTable(
       .default("pending")
       .notNull(),
     shippingAddress: json("shipping_address").notNull(),
+    shippingAmount: decimal("shipping_amount", {
+      precision: 10,
+      scale: 2,
+    }).notNull(),
+
+    shippingRuleId: integer("shipping_rule_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => new Date())
       .notNull(),
   },
+
   (t) => [
     index("orders_userId_idx").on(t.userId),
     index("orders_createdAt_idx").on(t.createdAt),
@@ -342,7 +349,7 @@ export const addresses = pgTable(
     whatsApp: text("whatsapp").notNull(),
 
     isDefault: boolean("is_default").default(false).notNull(),
-
+    shippingRuleId: integer("shipping_rule_id").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => new Date())
@@ -450,6 +457,10 @@ export const orderRelations = relations(orders, ({ one, many }) => ({
     fields: [orders.userId],
     references: [user.id],
   }),
+  shippingRule: one(shippingRules, {
+    fields: [orders.shippingRuleId],
+    references: [shippingRules.id],
+  }),
   items: many(orderItems),
 }));
 
@@ -464,6 +475,16 @@ export const orderItemRelations = relations(orderItems, ({ one }) => ({
   }),
 }));
 
+export const shippingRules = pgTable("shipping_rules", {
+  id: serial("id").primaryKey(),
+  country: text("country").default("Egypt").notNull(),
+  city: text("city"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  freeOver: decimal("free_over", { precision: 10, scale: 2 }),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 /* =========================
    ADDRESSES
 ========================= */
@@ -472,6 +493,10 @@ export const addressRelations = relations(addresses, ({ one }) => ({
   user: one(user, {
     fields: [addresses.userId],
     references: [user.id],
+  }),
+  shippingRule: one(shippingRules, {
+    fields: [addresses.shippingRuleId],
+    references: [shippingRules.id],
   }),
 }));
 
@@ -492,6 +517,7 @@ export type Order = InferSelectModel<typeof orders>;
 export type OrderItem = InferSelectModel<typeof orderItems>;
 
 export type Address = InferSelectModel<typeof addresses>;
+export type ShippingRule = InferSelectModel<typeof shippingRules>;
 
 export const schema = {
   user,
@@ -506,4 +532,5 @@ export const schema = {
   orders,
   orderItems,
   addresses,
+  shippingRules,
 };

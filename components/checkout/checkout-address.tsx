@@ -3,6 +3,7 @@ import { EmptyAddressState } from "./empty-address-state";
 import NewAddressForm from "./new-address-form";
 import SavedAddressList from "./saved-address-list";
 import { Plus, AlertTriangle, ChevronRight, Map } from "lucide-react";
+import { ShippingRules } from "@/actions/shipping-actions";
 
 type Props = {
   savedAddresses: Address[];
@@ -11,7 +12,9 @@ type Props = {
   selectedAddressId: number | null;
   showNewAddressForm: boolean;
   closeNewAddressForm: () => void;
+  setCurrentShippingRule: (value: number | null) => void;
   errors?: string;
+  shippingRules: ShippingRules;
 };
 
 export default function CheckoutAddress({
@@ -22,6 +25,8 @@ export default function CheckoutAddress({
   closeNewAddressForm,
   errors,
   onAddNewAddress,
+  shippingRules,
+  setCurrentShippingRule,
 }: Props) {
   const hasSavedAddresses = savedAddresses.length > 0;
 
@@ -91,6 +96,7 @@ export default function CheckoutAddress({
 
           {hasSavedAddresses && !showNewAddressForm && (
             <SavedAddressList
+              setCurrentShippingRule={setCurrentShippingRule}
               handleSelectAddress={handleSelectAddress}
               addresses={savedAddresses}
               selectedAddressId={selectedAddressId}
@@ -99,7 +105,11 @@ export default function CheckoutAddress({
 
           {showNewAddressForm && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
-              <NewAddressForm closeNewAddressForm={closeNewAddressForm} />
+              <NewAddressForm
+                setCurrentShippingRule={setCurrentShippingRule}
+                closeNewAddressForm={closeNewAddressForm}
+                shippingRules={shippingRules.data}
+              />
             </div>
           )}
         </div>

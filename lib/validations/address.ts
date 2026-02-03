@@ -1,5 +1,6 @@
 // lib/validations/address.ts
 import { z } from "zod";
+const egyptianMobileRegex = /^(10|11|12|15)[0-9]{8}$/;
 
 export const addressFieldsSchema = z.object({
   label: z.string().optional(),
@@ -9,10 +10,13 @@ export const addressFieldsSchema = z.object({
   city: z.string().min(2, "المدينة مطلوبة"),
   state: z.string().min(2, "المحافظة مطلوبة"),
   zip: z.string().min(2, "الرمز البريدي مطلوب"),
-  country: z.string().min(2, "الدولة مطلوبة"),
+  country: z.string().default("Egypt"),
 
-  phone: z.string().min(8, "رقم الهاتف غير صالح"),
-  whatsApp: z.string().min(8, "رقم واتساب غير صالح"),
+  shippingRuleId: z.number(),
+
+  phone: z.string().regex(egyptianMobileRegex, "رقم هاتف مصري غير صالح"),
+
+  whatsApp: z.string().regex(egyptianMobileRegex, "رقم واتساب مصري غير صالح"),
 
   isDefault: z.boolean().optional(),
 });

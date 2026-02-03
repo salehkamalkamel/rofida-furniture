@@ -41,7 +41,10 @@ export async function saveAddress(rawInput: any) {
 
     await db.insert(addresses).values({
       ...input,
+      phone: `+20${input.phone}`,
+      whatsApp: input.whatsApp ? `+20${input.whatsApp}` : "",
       userId: session.user.id,
+      shippingRuleId: rawInput?.shippingRuleId,
     });
 
     revalidatePath("/checkout");

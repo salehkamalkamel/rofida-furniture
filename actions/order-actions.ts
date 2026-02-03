@@ -3,13 +3,15 @@ import { Resend } from "resend";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import db from "..";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import {
+  Address,
   cartItems, // The table object (keep for clearUserCart)
   carts,
   orderItems,
   orders,
-  products, // Import this for type inference
+  products,
+  shippingRules, // Import this for type inference
   type CartItem, // Use 'type' keyword for clarity
 } from "@/db/schema";
 import { getAddressById } from "./address-actions";
@@ -341,4 +343,41 @@ export async function generateInvoiceAction(orderId: number) {
   const buffer = await renderToBuffer(element as any);
 
   return buffer.toString("base64");
+}
+
+export async function findShippingRule(address: Address) {
+  /* =========================
+     1️⃣ City-specific rule
+  ========================= */
+  const cityRule = await db.query.shippingRules.findFirst({
+    where: and(
+      eq(shippingRules.country, address.country),
+      eq(shippingRules.city, address.city),
+      eq(shippingRules.isActive, true),
+    ),
+  });
+
+  if (cityRule) return cityRule;
+
+  /* =========================
+     2️⃣ Country-wide rule
+  ========================= */
+  const countryRule = await db.query.shippingRules.findFirst({
+    where: and(
+      eq(shippingRules.country, address.country),
+      isNull(shippingRules.city),
+      eq(shippingRules.isActive, true),
+    ),
+  });
+
+  if (countryRule) return countryRule;
+
+  /* =========================
+     3️⃣ No rule found
+  ========================= */
+  throw new Error(
+    `No shipping rule found for ${address.country}${
+      address.city ? ` / ${address.city}` : ""
+    }`,
+  );
 }

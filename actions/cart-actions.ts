@@ -7,6 +7,7 @@ import {
   CartItem,
   Product,
   Cart,
+  addresses,
 } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -16,6 +17,8 @@ import db from "@/index";
 import z from "zod";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { calculateOrderTotals } from "@/lib/pricing/calculateOrder";
+import { findShippingRule } from "./order-actions";
 
 /**
  * GET FULL CART
@@ -232,4 +235,39 @@ export async function isProductInCart(productId: number) {
     console.error("IS_PRODUCT_IN_CART_ERROR:", error);
     return false;
   }
+}
+
+export async function getCartSummary(addressId?: number) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const cart = await db.query.carts.findFirst({
+    where: eq(carts.userId, session.user.id),
+    with: { items: true },
+  });
+
+  if (!cart) return null;
+
+  const address = addressId
+    ? await db.query.addresses.findFirst({ where: eq(addresses.id, addressId) })
+    : null;
+
+  const shippingRule = address ? await findShippingRule(address) : null;
+
+  const totals = shippingRule
+    ? calculateOrderTotals({
+        items: cart.items.map((i) => ({
+          price: Number(i.priceAtAdd),
+          quantity: i.quantity,
+          customizationPrice: Number(i.customizationPrice),
+        })),
+        shippingRule,
+      })
+    : null;
+
+  return {
+    cart,
+    totals,
+    shippingRule,
+  };
 }

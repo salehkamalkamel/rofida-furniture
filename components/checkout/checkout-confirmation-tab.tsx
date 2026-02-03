@@ -1,23 +1,27 @@
 "use client";
 
-import { createOrder } from "@/actions/order-actions";
 import { Address } from "@/db/schema";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { PackageCheck, Truck, Banknote, ShieldAlert, Zap } from "lucide-react";
+import { createOrder } from "@/actions/create-order-action";
 
 type Props = {
   address: Address;
+  currentShippingRule: number;
 };
 
-export default function CheckoutConfirmationTab({ address }: Props) {
+export default function CheckoutConfirmationTab({
+  address,
+  currentShippingRule,
+}: Props) {
   const [isPendingPlaceOrder, startTransitionPLaceOrder] = useTransition();
   const router = useRouter();
 
   function handlePlaceOrder() {
     startTransitionPLaceOrder(async () => {
-      const res = await createOrder(address.id);
+      const res = await createOrder(address.id, currentShippingRule);
       if (res.success) {
         toast.success("تم تأكيد العملية - جاري تحويلك");
         router.push(`/checkout/success?orderId=${res.orderId}`);

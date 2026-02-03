@@ -1,10 +1,11 @@
 "use server";
 
-import db from "@/index";
-import { wishlistItems, cartItems } from "@/db/schema";
-import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { eq, inArray } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+
+import { and, eq, inArray, desc } from "drizzle-orm";
+import db from "..";
+import { cartItems, carts, wishlistItems, wishlists } from "@/db/schema";
 
 export async function getProductsWithUserState({
   limit,
@@ -15,11 +16,16 @@ export async function getProductsWithUserState({
   category?: string;
   label?: "new_arrival" | "best_seller" | "on_sale" | "limited_edition";
 }) {
+  /* =========================
+     AUTH SESSION
+  ========================= */
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  // 1️⃣ Fetch products
+  /* =========================
+     FETCH PRODUCTS
+  ========================= */
   const productList = await db.query.products.findMany({
     where: (p, { eq, and }) =>
       and(
@@ -31,34 +37,67 @@ export async function getProductsWithUserState({
     orderBy: (p, { desc }) => desc(p.createdAt),
   });
 
+  // Guest or no products → no user state
   if (!session?.user || productList.length === 0) {
-    return productList.map((p) => ({
-      product: p,
+    return productList.map((product) => ({
+      product,
       isInCart: false,
       isInWishlist: false,
     }));
   }
 
   const productIds = productList.map((p) => p.id);
+  const userId = session.user.id;
 
-  // 2️⃣ Fetch wishlist & cart in parallel
-  const [wishlist, cart] = await Promise.all([
-    db.query.wishlistItems.findMany({
-      where: inArray(wishlistItems.productId, productIds),
-      with: { wishlist: true },
+  /* =========================
+     FETCH USER CART & WISHLIST
+  ========================= */
+  const [userCart, userWishlist] = await Promise.all([
+    db.query.carts.findFirst({
+      where: eq(carts.userId, userId),
     }),
-    db.query.cartItems.findMany({
-      where: inArray(cartItems.productId, productIds),
-      with: { cart: true },
+    db.query.wishlists.findFirst({
+      where: eq(wishlists.userId, userId),
     }),
   ]);
 
-  const wishlistSet = new Set(wishlist.map((i) => i.productId));
-  const cartSet = new Set(cart.map((i) => i.productId));
+  /* =========================
+     FETCH USER ITEMS
+  ========================= */
+  const [userCartItems, userWishlistItems] = await Promise.all([
+    userCart
+      ? db.query.cartItems.findMany({
+          where: and(
+            eq(cartItems.cartId, userCart.id),
+            inArray(cartItems.productId, productIds),
+          ),
+          columns: { productId: true },
+        })
+      : [],
 
+    userWishlist
+      ? db.query.wishlistItems.findMany({
+          where: and(
+            eq(wishlistItems.wishlistId, userWishlist.id),
+            inArray(wishlistItems.productId, productIds),
+          ),
+          columns: { productId: true },
+        })
+      : [],
+  ]);
+
+  /* =========================
+     BUILD LOOKUP SETS
+  ========================= */
+  const cartSet = new Set(userCartItems.map((i) => i.productId));
+  const wishlistSet = new Set(userWishlistItems.map((i) => i.productId));
+
+  /* =========================
+     FINAL RESPONSE
+  ========================= */
   return productList.map((product) => ({
     product,
-    isInWishlist: wishlistSet.has(product.id),
     isInCart: cartSet.has(product.id),
+    isInWishlist: wishlistSet.has(product.id),
   }));
 }
