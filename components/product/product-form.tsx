@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils"; // Assuming you have a cn utility, if not use 
 const SECTIONS = [
   {
     id: "basic",
-    label: "الأساسية", // Shortened for mobile
+    label: "الأساسية",
     fullLabel: "المعلومات الأساسية",
     icon: LayoutGrid,
     fields: ["name", "nameEn", "sku", "categoryId", "slug"],
@@ -79,8 +79,7 @@ export default function ProductForm() {
     defaultValues: {
       sku: "",
       stockStatus: "in_stock",
-      availableStatus: "draft",
-      isOnOffer: false,
+      availableStatus: "archived",
       images: [],
       colors: [],
       measurements: { unit: "cm" },

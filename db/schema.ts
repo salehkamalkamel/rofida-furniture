@@ -124,6 +124,7 @@ export const products = pgTable(
     id: serial("id").primaryKey(),
     sku: varchar("sku", { length: 50 }).unique(),
     name: varchar("name", { length: 255 }).notNull(),
+    nameEn: varchar("name_en", { length: 255 }).notNull(),
     slug: varchar("slug", { length: 255 }).notNull().unique(),
     briefDescription: text("brief_description").notNull(),
     detailedDescription: text("detailed_description").notNull(),
@@ -146,10 +147,12 @@ export const products = pgTable(
     buildTime: varchar("build_time", { length: 100 }),
     images: json("images").$type<string[]>().default([]),
     isCustomizable: boolean("is_customizable").default(false),
+    isDeleted: boolean("is_deleted").default(false),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => new Date())
       .notNull(),
+    createdBy: text("created_by").references(() => user.id),
   },
   (t) => [
     index("products_slug_idx").on(t.slug),
@@ -396,7 +399,11 @@ export const accountRelations = relations(account, ({ one }) => ({
    PRODUCTS
 ========================= */
 
-export const productRelations = relations(products, ({ many }) => ({
+export const productRelations = relations(products, ({ one, many }) => ({
+  user: one(user, {
+    fields: [products.createdBy],
+    references: [user.id],
+  }),
   cartItems: many(cartItems),
   wishlistItems: many(wishlistItems),
   orderItems: many(orderItems),
@@ -518,6 +525,9 @@ export type OrderItem = InferSelectModel<typeof orderItems>;
 
 export type Address = InferSelectModel<typeof addresses>;
 export type ShippingRule = InferSelectModel<typeof shippingRules>;
+export type ProductLabel = (typeof productLabelEnum.enumValues)[number];
+export type AvailableStatus = (typeof availableStatusEnum.enumValues)[number];
+
 
 export const schema = {
   user,

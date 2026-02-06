@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { categories } from "@/lib/data";
 import { ProductFormValues } from "@/app/dashboard/products/new/_schema";
 import { generateSlug } from "@/lib/healpers";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Link as LinkIcon } from "lucide-react";
 
 export function BasicInfoSection() {
   const {
@@ -14,27 +14,22 @@ export function BasicInfoSection() {
     setValue,
   } = useFormContext<ProductFormValues>();
 
-  // 1. Watch both names for fallback logic
   const nameAr = watch("name");
   const nameEn = watch("nameEn");
   const categoryId = watch("categoryId");
 
-  // 2. Simplified Auto-Generation Logic
+  // Auto-generate slug only if untouched
   useEffect(() => {
-    // Only auto-generate if the user hasn't manually typed in the slug field
-    if (!touchedFields.slug) {
-      const sourceText = nameEn || nameAr; // English priority, Arabic fallback
-      if (sourceText) {
-        const generated = generateSlug(sourceText);
-        setValue("slug", generated, { shouldValidate: true });
-      }
+    if (!touchedFields.slug && (nameEn || nameAr)) {
+      const source = nameEn || nameAr;
+      const generated = generateSlug(source);
+      setValue("slug", generated, { shouldValidate: true });
     }
   }, [nameEn, nameAr, setValue, touchedFields.slug]);
 
   const generateSKU = () => {
-    const prefix = categoryId
-      ? categoryId.substring(0, 3).toUpperCase()
-      : "PRD";
+    const currentCat = categoryId || "PRD";
+    const prefix = currentCat.substring(0, 3).toUpperCase();
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     setValue("sku", `${prefix}-${random}`, {
       shouldValidate: true,
@@ -45,6 +40,7 @@ export function BasicInfoSection() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Arabic Name */}
         <div>
           <label className="block text-sm font-medium mb-1">
             اسم المنتج (عربي) <span className="text-red-500">*</span>
@@ -52,7 +48,7 @@ export function BasicInfoSection() {
           <input
             {...register("name")}
             className={`w-full h-12 px-4 bg-muted border rounded focus:ring-2 transition-all ${errors.name ? "border-destructive ring-destructive/20" : "border-transparent focus:ring-primary/20"}`}
-            placeholder="مثال: مكتب"
+            placeholder="مثال: مكتب خشبي"
           />
           {errors.name && (
             <p className="text-destructive text-xs mt-1">
@@ -61,6 +57,7 @@ export function BasicInfoSection() {
           )}
         </div>
 
+        {/* English Name */}
         <div>
           <label className="block text-sm font-medium mb-1">
             اسم المنتج (إنجليزي)
@@ -69,7 +66,7 @@ export function BasicInfoSection() {
             {...register("nameEn")}
             dir="ltr"
             className={`w-full h-12 px-4 bg-muted border rounded focus:ring-2 transition-all ${errors.nameEn ? "border-destructive ring-destructive/20" : "border-transparent focus:ring-primary/20"}`}
-            placeholder="e.g., Desk"
+            placeholder="e.g., Wooden Desk"
           />
           {errors.nameEn && (
             <p className="text-destructive text-xs mt-1">
@@ -78,38 +75,41 @@ export function BasicInfoSection() {
           )}
         </div>
       </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          SKU (رمز المخزون) <span className="text-red-500">*</span>
-        </label>
-        <div className="flex gap-2">
-          <div className="relative flex-1">
+
+      {/* SKU & Category */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            SKU (رمز المخزون) <span className="text-red-500">*</span>
+          </label>
+          <div className="flex gap-2">
             <input
               {...register("sku")}
-              className={`w-full h-12 px-4 bg-muted border rounded focus:ring-2 transition-all uppercase placeholder:normal-case ${errors.sku ? "border-destructive ring-destructive/20" : "border-transparent focus:ring-primary/20"}`}
-              placeholder="GEN-XYZ-123"
+              className={`w-full h-12 px-4 bg-muted border rounded uppercase ${errors.sku ? "border-destructive" : "border-transparent"}`}
+              placeholder="CAT-XYZ-123"
             />
+            <button
+              type="button"
+              onClick={generateSKU}
+              className="px-4 bg-secondary rounded border hover:bg-secondary/80 transition-colors"
+            >
+              <RefreshCw size={18} />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={generateSKU}
-            className="px-4 bg-secondary text-secondary-foreground rounded border hover:bg-secondary/80 transition-colors flex items-center gap-2 font-medium text-sm"
-          >
-            <RefreshCw size={16} /> توليد
-          </button>
+          {errors.sku && (
+            <p className="text-destructive text-xs mt-1">
+              {errors.sku.message}
+            </p>
+          )}
         </div>
-        {errors.sku && (
-          <p className="text-destructive text-xs mt-1">{errors.sku.message}</p>
-        )}
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
         <div>
           <label className="block text-sm font-medium mb-1">
             الفئة <span className="text-red-500">*</span>
           </label>
           <select
             {...register("categoryId")}
-            className={`w-full h-12 px-4 bg-muted border rounded focus:ring-2 transition-all ${errors.categoryId ? "border-destructive ring-destructive/20" : "border-transparent focus:ring-primary/20"}`}
+            className={`w-full h-12 px-4 bg-muted border rounded ${errors.categoryId ? "border-destructive" : "border-transparent"}`}
           >
             <option value="">اختر فئة...</option>
             {categories.map((c) => (
@@ -124,28 +124,29 @@ export function BasicInfoSection() {
             </p>
           )}
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            الرابط (Slug)
-          </label>
-          <input
-            {...register("slug")}
-            className={`w-full h-12 px-4 rounded transition-all ${
-              errors.slug
-                ? "bg-destructive/5 border-destructive border"
-                : "bg-muted/50 border-transparent"
-            }`}
-            readOnly
-          />
-          {errors.slug && (
-            <p className="text-destructive text-xs mt-1 font-bold animate-shake">
-              {errors.slug.message}
-            </p>
-          )}
-        </div>
       </div>
-      {/* Description fields remain similar but with consistent error styling */}
-      {/*Breif Descriptions */}
+
+      {/* Slug - Now Editable */}
+      <div>
+        <label className=" text-sm font-medium mb-1 flex items-center gap-2">
+          <LinkIcon size={14} /> رابط المنتج (Slug)
+        </label>
+        <input
+          {...register("slug")}
+          // Removed readOnly so users can fix Arabic chars if regex fails
+          className={`w-full h-12 px-4 bg-muted border rounded ltr ${errors.slug ? "border-destructive bg-destructive/5" : "border-transparent"}`}
+        />
+        <p className="text-[10px] text-muted-foreground mt-1">
+          يجب أن يكون بالإنجليزية، بدون مسافات (استخدم الشرطات -)
+        </p>
+        {errors.slug && (
+          <p className="text-destructive text-xs mt-1 font-bold">
+            {errors.slug.message}
+          </p>
+        )}
+      </div>
+
+      {/* Descriptions */}
       <div>
         <label className="block text-sm font-medium mb-1">وصف مختصر</label>
         <textarea
@@ -154,12 +155,11 @@ export function BasicInfoSection() {
           className="w-full p-4 bg-muted border-0 rounded"
         />
         {errors.briefDescription && (
-          <p className="text-red-500 text-sm">
+          <p className="text-destructive text-sm">
             {errors.briefDescription.message}
           </p>
         )}
       </div>
-      {/* Detailed Descriptions */}
       <div>
         <label className="block text-sm font-medium mb-1">وصف تفصيلي</label>
         <textarea
@@ -168,7 +168,7 @@ export function BasicInfoSection() {
           className="w-full p-4 bg-muted border-0 rounded"
         />
         {errors.detailedDescription && (
-          <p className="text-red-500 text-sm">
+          <p className="text-destructive text-sm">
             {errors.detailedDescription.message}
           </p>
         )}

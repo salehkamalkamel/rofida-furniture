@@ -6,12 +6,30 @@ import { revalidatePath } from "next/cache";
 import db from "@/index";
 import { ProductFormValues, productSchema } from "./_schema";
 import { generateSlug } from "@/lib/healpers";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 /**
  * CREATE PRODUCT
  */
 export async function createProduct(values: ProductFormValues) {
-  // 1. Server-side Validation
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session?.user) {
+    return {
+      success: false,
+      error: "يجب تسجيل الدخول",
+    };
+  }
+
+  if (session?.user.role !== "admin") {
+    return {
+      success: false,
+      error: "غير مصرح لغير الادمين اضافة منتجات",
+    };
+  }
+
   const validated = productSchema.safeParse(values);
   if (!validated.success) {
     return {
@@ -65,7 +83,7 @@ export async function updateProduct(
   values: Partial<ProductFormValues>,
 ) {
   // Partial validation for updates
-  const validated = productSchema.partial().safeParse(values);
+  const validated = productSchema.safeParse(values);
   if (!validated.success) return { error: "Validation Failed" };
 
   try {

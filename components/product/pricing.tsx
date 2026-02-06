@@ -1,7 +1,7 @@
 "use client";
-import { ProductFormValues } from "@/app/dashboard/products/new/_schema";
 import { useFormContext } from "react-hook-form";
-import { AlertCircle } from "lucide-react";
+import { ProductFormValues } from "@/app/dashboard/products/new/_schema";
+import { Tag } from "lucide-react";
 
 export function PricingSection() {
   const {
@@ -14,13 +14,9 @@ export function PricingSection() {
   const salePrice = watch("salePrice");
   const isOnOffer = watch("isOnOffer");
 
-  // UX Logic: Is the sale price invalid?
-  const isInvalidSalePrice =
-    isOnOffer && price && salePrice && Number(salePrice) >= Number(price);
-
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">
             السعر الأساسي <span className="text-red-500">*</span>
@@ -29,8 +25,9 @@ export function PricingSection() {
             <input
               type="number"
               step="0.01"
-              {...register("price", { valueAsNumber: true })}
-              className={`w-full h-12 px-4 bg-muted border rounded focus:ring-2 transition-all ${errors.price ? "border-destructive ring-destructive/20" : "border-transparent focus:ring-primary/20"}`}
+              // Removed valueAsNumber: true -> Let Zod preprocess handle it
+              {...register("price")}
+              className={`w-full h-12 px-4 bg-muted border rounded ${errors.price ? "border-destructive ring-destructive/20" : "border-transparent"}`}
               placeholder="0.00"
             />
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-bold">
@@ -38,7 +35,7 @@ export function PricingSection() {
             </span>
           </div>
           {errors.price && (
-            <p className="text-destructive text-xs mt-1 font-medium">
+            <p className="text-destructive text-xs mt-1">
               {errors.price.message}
             </p>
           )}
@@ -51,12 +48,8 @@ export function PricingSection() {
               type="number"
               step="0.01"
               disabled={!isOnOffer}
-              {...register("salePrice", { valueAsNumber: true })}
-              className={`w-full h-12 px-4 bg-muted border rounded focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                errors.salePrice || isInvalidSalePrice
-                  ? "border-destructive ring-destructive/20"
-                  : "border-transparent focus:ring-primary/20"
-              }`}
+              {...register("salePrice")}
+              className={`w-full h-12 px-4 bg-muted border rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed ${errors.salePrice ? "border-destructive ring-destructive/20" : "border-transparent"}`}
               placeholder="0.00"
             />
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-bold">
@@ -64,56 +57,56 @@ export function PricingSection() {
             </span>
           </div>
           {errors.salePrice && (
-            <p className="text-destructive text-xs mt-1 font-medium">
+            <p className="text-destructive text-xs mt-1">
               {errors.salePrice.message}
             </p>
           )}
         </div>
       </div>
 
-      {/* Logic Validation Alert */}
-      {isInvalidSalePrice && (
-        <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive text-sm rounded-lg animate-pulse">
-          <AlertCircle size={16} />
-          <span>تنبيه: سعر العرض يجب أن يكون أقل من السعر الأساسي</span>
+      <div className="p-4 rounded-lg bg-muted/30 border border-border flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center ${isOnOffer ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+          >
+            <Tag size={20} />
+          </div>
+          <div>
+            <p className="font-bold text-sm">تفعيل خصم</p>
+            <p className="text-xs text-muted-foreground">
+              عند التفعيل، سيظهر السعر القديم مشطوباً
+            </p>
+          </div>
         </div>
-      )}
-
-      <div className="flex items-center gap-2">
         <input
           type="checkbox"
-          id="offer"
           {...register("isOnOffer")}
-          className="w-4 h-4 accent-primary cursor-pointer"
+          className="w-6 h-6 accent-primary cursor-pointer"
         />
-        <label htmlFor="offer" className="cursor-pointer select-none">
-          تفعيل العرض
-        </label>
       </div>
 
-      {/* Success/Profit Calculation Card */}
+      {/* Profit/Saving Calculation Visualization */}
       {isOnOffer &&
         price &&
         salePrice &&
-        !isInvalidSalePrice &&
-        Number(price) > 0 && (
+        !errors.salePrice &&
+        Number(price) > Number(salePrice) && (
           <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between animate-in slide-in-from-top-2">
-            <div className="flex flex-col">
-              <span className="text-xs text-emerald-600 font-bold uppercase tracking-wider">
+            <div>
+              <span className="text-xs text-emerald-600 font-bold uppercase">
                 نسبة الخصم
               </span>
-              <span className="text-2xl font-bold text-emerald-700">
-                {Math.round((1 - salePrice / price) * 100)}%
-              </span>
+              <div className="text-2xl font-bold text-emerald-700">
+                {Math.round((1 - Number(salePrice) / Number(price)) * 100)}%
+              </div>
             </div>
-            <div className="h-8 w-px bg-emerald-200" />
-            <div className="flex flex-col items-end">
-              <span className="text-xs text-emerald-600 font-bold uppercase tracking-wider">
-                قيمة التوفير
+            <div className="text-right">
+              <span className="text-xs text-emerald-600 font-bold uppercase">
+                توفير
               </span>
-              <span className="text-xl font-bold text-emerald-700">
-                {(price - salePrice).toFixed(2)} جنية
-              </span>
+              <div className="text-xl font-bold text-emerald-700">
+                {(Number(price) - Number(salePrice)).toFixed(2)} جنية
+              </div>
             </div>
           </div>
         )}

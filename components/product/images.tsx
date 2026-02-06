@@ -20,7 +20,6 @@ export function ImagesSection() {
     setValue,
     watch,
     formState: { errors },
-    trigger,
   } = useFormContext<ProductFormValues>();
   const [newImageUrl, setNewImageUrl] = useState("");
   const [loadingImage, setLoadingImage] = useState(false);
@@ -81,9 +80,13 @@ export function ImagesSection() {
   };
 
   const handleSetMainImage = (index: number) => {
+    if (index === 0) return;
     const newImages = [...images];
-    const [selectedImage] = newImages.splice(index, 1);
-    newImages.unshift(selectedImage);
+
+    const temp = newImages[0];
+    newImages[0] = newImages[index];
+    newImages[index] = temp;
+
     setValue("images", newImages, { shouldValidate: true, shouldDirty: true });
   };
 
