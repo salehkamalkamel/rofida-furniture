@@ -186,9 +186,6 @@ export async function getOrderById(orderId: number) {
     },
   });
 
-  // Security check: Only allow the owner to see the success page
-  if (!order || order.userId !== session.user.id) return null;
-
   return order;
 }
 

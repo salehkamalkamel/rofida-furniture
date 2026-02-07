@@ -365,7 +365,11 @@ export function InstantBuyForm({
 
       {/* Actions */}
       <button
-        onClick={isNewAddressMode ? handleSubmit(onSubmit) : onSubmit}
+        onClick={
+          isNewAddressMode
+            ? handleSubmit(onSubmit)
+            : () => onSubmit({} as FormData)
+        }
         disabled={isPending}
         className="w-full bg-foreground text-background h-14 font-black uppercase tracking-[0.2em] hover:bg-primary transition-colors flex items-center justify-center gap-3 disabled:opacity-50 mt-4"
       >

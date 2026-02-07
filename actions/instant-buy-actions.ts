@@ -32,46 +32,71 @@ interface InstantOrderPayload {
   productData: {
     productId: number;
     quantity: number;
+    priceAtAdd: number;
+    customizationPrice: number;
     color?: string;
     isCustomized: boolean;
     customizationText?: string;
-    priceAtAdd: number;
-    customizationPrice: number;
   };
 }
 
 export async function placeInstantOrder(payload: InstantOrderPayload) {
   const session = await auth.api.getSession({ headers: await headers() });
 
-  // Validation: If not guest, must have session
-  if (!payload.isGuest && !session?.user) {
-    return { success: false, error: "Unauthorized" };
-  }
-  if (!session?.user) {
-    return { success: false, error: "Authentication failed" };
+  // 1. Determine the User ID
+  let userId = session?.user?.id;
+
+  // Logic to handle Guest Identity based on Phone Number
+  if (payload.addressData?.phone) {
+    const guestEmail = `${payload.addressData.phone}@guest.local`;
+
+    // A. Check if this phone number already exists in our DB
+    const existingUser = await db.query.user.findFirst({
+      where: eq(user.email, guestEmail),
+    });
+
+    if (existingUser) {
+      // SCENARIO 1: Returning Guest
+      // We attribute the order to the existing history of this phone number
+      userId = existingUser.id;
+    } else if (session?.user?.isAnonymous) {
+      // SCENARIO 2: New Guest, currently in Anonymous Session
+      // We UPDATE the anonymous account to be the "Phone User"
+      // This keeps them logged in but standardizes their record
+      await db
+        .update(user)
+        .set({
+          email: guestEmail,
+          name: payload.addressData.fullName,
+          // We keep isAnonymous=true or set to false depending on if you consider phone# 'verified'
+          // usually keep it true or distinct until they set a password
+        })
+        .where(eq(user.id, session.user.id));
+
+      userId = session.user.id;
+    } else if (!userId) {
+      // SCENARIO 3: Totally new, no session (shouldn't happen if client calls signIn.anon, but safe fallback)
+      const newId = nanoid();
+      await db.insert(user).values({
+        id: newId,
+        name: payload.addressData.fullName,
+        email: guestEmail,
+        role: "user",
+        emailVerified: false,
+        isAnonymous: true,
+      });
+      userId = newId;
+    }
   }
 
-  let userId = session.user.id;
+  // Final Safety Check
+  if (!userId) {
+    return { success: false, error: "فشل في تحديد المستخدم" };
+  }
 
   try {
     return await db.transaction(async (tx) => {
-      // 1. Handle Guest User Creation
-      if (payload.isGuest || !userId) {
-        // Simple logic: Check if phone number already exists in users (optional),
-        // or just create a new guest user ID.
-        // For this architecture, we create a new user record for the guest.
-        userId = nanoid(); // Generate a unique ID
-
-        await tx.insert(user).values({
-          id: userId,
-          name: payload.addressData!.fullName,
-          email: `${payload.addressData!.phone}@guest.local`, // Placeholder email
-          role: "user",
-          emailVerified: false,
-        });
-      }
-
-      // 2. Handle Address
+      // 2. Handle Address (Logic remains mostly the same, simplified)
       let finalAddressId = payload.addressId;
       let shippingAddressSnapshot = null;
 
@@ -98,7 +123,7 @@ export async function placeInstantOrder(payload: InstantOrderPayload) {
         finalAddressId = newAddr.id;
         shippingAddressSnapshot = newAddr;
       } else if (finalAddressId) {
-        // Fetch existing address for snapshot
+        // Fetch existing
         shippingAddressSnapshot = await tx.query.addresses.findFirst({
           where: eq(addresses.id, finalAddressId),
         });
@@ -108,7 +133,7 @@ export async function placeInstantOrder(payload: InstantOrderPayload) {
         throw new Error("Address failed to resolve");
       }
 
-      // 3. Calculate Totals (Double check server side)
+      // 3. Calculate Totals
       const itemTotal =
         (Number(payload.productData.priceAtAdd) +
           Number(payload.productData.customizationPrice)) *
@@ -117,6 +142,7 @@ export async function placeInstantOrder(payload: InstantOrderPayload) {
       const shippingRule = await tx.query.shippingRules.findFirst({
         where: eq(shippingRules.id, payload.shippingRuleId),
       });
+
       const shippingCost = Number(shippingRule?.price || 0);
       const totalAmount = itemTotal + shippingCost;
 
@@ -135,10 +161,9 @@ export async function placeInstantOrder(payload: InstantOrderPayload) {
         })
         .returning();
 
-      // 5. Create Order Item
-      // Fetch product details for snapshot (name, sku, image)
+      // 5. Create Order Items
       const product = await tx.query.products.findFirst({
-        where: eq(products.id, payload.productData.productId), // Assuming products import is correct here from context
+        where: eq(products.id, payload.productData.productId),
       });
 
       await tx.insert(orderItems).values({
@@ -147,7 +172,7 @@ export async function placeInstantOrder(payload: InstantOrderPayload) {
         productName: product?.name || "Unknown Product",
         productSku: product?.sku,
         productImage: product?.images?.[0] as string,
-        price: payload.productData.priceAtAdd.toString(), // Base price
+        price: payload.productData.priceAtAdd.toString(),
         quantity: payload.productData.quantity,
         selectedColor: payload.productData.color,
         customizationText: payload.productData.customizationText,
@@ -158,8 +183,12 @@ export async function placeInstantOrder(payload: InstantOrderPayload) {
 
       return { success: true, orderId: newOrder.id };
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Instant Buy Error:", error);
-    return { success: false, error: "فشل في إنشاء الطلب. حاول مرة أخرى." };
+    // Return a clean error message to the client
+    return {
+      success: false,
+      error: error.message || "حدث خطأ أثناء تنفيذ الطلب",
+    };
   }
 }

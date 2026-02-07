@@ -29,7 +29,11 @@ export default function HeroCarousel() {
 
   return (
     <section
-      className="relative w-full h-[80vh] md:h-[90vh] overflow-hidden bg-foreground group"
+      /* MOBILE CHANGE: Changed h-[80vh] to h-[50vh] sm:h-[60vh] 
+         This ensures users see the "next" section (likely products) 
+         peeking up from the bottom.
+      */
+      className="relative w-full h-[55vh] md:h-[90vh] overflow-hidden bg-foreground group border-b-4 border-primary"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       dir="rtl"
@@ -45,7 +49,6 @@ export default function HeroCarousel() {
                 : "translate-x-full opacity-0 z-0"
             }`}
           >
-            {/* Image with Industrial Scale */}
             <Image
               src={slide.image || "/placeholder.svg"}
               alt={slide.title}
@@ -54,43 +57,44 @@ export default function HeroCarousel() {
               className={`object-cover transition-transform duration-6000 ${isActive ? "scale-110" : "scale-100"}`}
             />
 
-            {/* High-Contrast Overlay */}
-            <div className="absolute inset-0 bg-linear-to-l from-black/80 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-l from-black/90 via-black/40 to-transparent" />
 
             <div className="absolute inset-0 flex items-center">
-              <div className="max-w-7xl mx-auto px-6 w-full">
-                <div className="max-w-3xl space-y-6">
-                  {/* Technical Label */}
+              <div className="max-w-7xl mx-auto px-4 md:px-6 w-full">
+                <div className="max-w-3xl space-y-3 md:space-y-6">
+                  {/* Technical Label - Shrunk for mobile */}
                   <div
-                    className={`flex items-center gap-4 transition-all delay-300 duration-700 ${isActive ? "opacity-100 translate-x-0" : "opacity-0 translate-x-12"}`}
+                    className={`flex items-center gap-2 md:gap-4 transition-all delay-300 duration-700 ${isActive ? "opacity-100 translate-x-0" : "opacity-0 translate-x-12"}`}
                   >
-                    <span className="h-px w-12 bg-primary" />
-                    <span className="text-primary font-black uppercase tracking-[0.4em] text-xs">
-                      Collection 2024
+                    <span className="h-0.5 w-6 md:w-12 bg-primary" />
+                    <span className="text-primary font-black uppercase tracking-[0.2em] md:tracking-[0.4em] text-[10px] md:text-xs">
+                      ROVIDA_SYS_COLLECTION_2026
                     </span>
                   </div>
 
+                  {/* Title - Responsive sizing to prevent massive text on small screens */}
                   <h2
-                    className={`text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[0.85] tracking-tighter uppercase transition-all delay-500 duration-700 ${isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"}`}
+                    className={`text-4xl md:text-7xl lg:text-8xl font-black text-white leading-[0.9] tracking-tighter uppercase transition-all delay-500 duration-700 ${isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
                   >
                     {slide.title}
                   </h2>
 
+                  {/* Subtitle - Shorter line clamp for mobile */}
                   <p
-                    className={`text-lg md:text-xl text-white/70 max-w-xl font-medium transition-all delay-700 duration-700 ${isActive ? "opacity-100" : "opacity-0"}`}
+                    className={`text-sm md:text-xl text-white/70 max-w-sm md:max-w-xl font-bold transition-all delay-700 duration-700 line-clamp-2 md:line-clamp-none ${isActive ? "opacity-100" : "opacity-0"}`}
                   >
                     {slide.subtitle}
                   </p>
 
                   <div
-                    className={`pt-4 transition-all delay-1000 duration-700 ${isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+                    className={`pt-2 md:pt-4 transition-all delay-1000 duration-700 ${isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
                   >
                     <Link
                       href={slide.link}
-                      className="inline-flex items-center gap-6 bg-primary text-white px-10 py-5 font-black text-sm uppercase tracking-widest hover:bg-white hover:text-black transition-all duration-300 group/btn"
+                      className="inline-flex items-center gap-4 md:gap-6 bg-primary text-white px-6 md:px-10 py-3 md:py-5 font-black text-xs md:text-sm uppercase tracking-widest hover:bg-white hover:text-black transition-all duration-300 group/btn shadow-[6px_6px_0px_0px_rgba(255,255,255,0.2)]"
                     >
                       {slide.cta}
-                      <ArrowLeft className="w-5 h-5 transition-transform group-hover/btn:-translate-x-2" />
+                      <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 transition-transform group-hover/btn:-translate-x-2" />
                     </Link>
                   </div>
                 </div>
@@ -100,17 +104,19 @@ export default function HeroCarousel() {
         );
       })}
 
-      {/* INDUSTRIAL NAVIGATION INTERFACE */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-white/10 backdrop-blur-md bg-black/20">
-        <div className="max-w-7xl mx-auto flex h-24">
+      {/* RE-ENGINEERED NAVIGATION FOR MOBILE SIZING */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-white/10 backdrop-blur-md bg-black/40">
+        <div className="max-w-7xl mx-auto flex h-16 md:h-24">
           {/* Slide Counter */}
-          <div className="flex items-center px-8 border-l border-white/10 text-white font-black text-2xl italic">
+          <div className="flex items-center px-4 md:px-8 border-l border-white/10 text-white font-black text-lg md:text-2xl italic">
             <span className="text-primary">0{currentSlide + 1}</span>
-            <span className="mx-2 opacity-20">/</span>
-            <span className="opacity-40 text-sm">0{slidesCount}</span>
+            <span className="mx-1 md:mx-2 opacity-20">/</span>
+            <span className="opacity-40 text-[10px] md:text-sm">
+              0{slidesCount}
+            </span>
           </div>
 
-          {/* Progress Bars (Interactive) */}
+          {/* Progress Bars (Hidden on mobile to save height) */}
           <div className="flex-1 hidden md:flex">
             {heroSlides.map((_, i) => (
               <button
@@ -140,19 +146,19 @@ export default function HeroCarousel() {
             ))}
           </div>
 
-          {/* Arrows */}
+          {/* Responsive Arrows */}
           <div className="flex border-r border-white/10">
             <button
               onClick={prevSlide}
-              className="w-24 flex items-center justify-center text-white hover:bg-primary transition-colors border-l border-white/10"
+              className="w-16 md:w-24 flex items-center justify-center text-white hover:bg-primary transition-colors border-l border-white/10"
             >
-              <ArrowRight className="w-6 h-6" />
+              <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
             </button>
             <button
               onClick={nextSlide}
-              className="w-24 flex items-center justify-center text-white hover:bg-primary transition-colors"
+              className="w-16 md:w-24 flex items-center justify-center text-white hover:bg-primary transition-colors"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
             </button>
           </div>
         </div>

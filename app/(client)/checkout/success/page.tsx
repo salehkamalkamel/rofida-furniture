@@ -13,7 +13,8 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
 
   if (!orderId) notFound();
 
-  const order = await getOrderById(parseInt(orderId));
+  const order = await getOrderById(Number(orderId));
+  console.log(order);
 
   if (!order) {
     return (
