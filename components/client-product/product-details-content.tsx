@@ -17,6 +17,7 @@ import { addToCart } from "@/actions/cart-actions";
 import { toast } from "sonner";
 import { calculatePrice } from "@/lib/pricing";
 import { WishlistButton } from "../wishlist-btn";
+import { useRouter } from "next/navigation";
 
 interface ProductDetailContentProps {
   product: Product;
@@ -34,11 +35,28 @@ export default function ProductDetailContent({
   const [showCustomization, setShowCustomization] = useState(false);
   const [customizationText, setCustomizationText] = useState("");
 
+  const router = useRouter();
+
   // --- REFACTORED LOGIC ---
   // Derive all price data instantly using the shared brain
   const priceDetails = calculatePrice(product, quantity, showCustomization);
   const isAvailable = product.stockStatus !== "out_of_stock";
   // ------------------------
+
+  const handleInstantBuy = () => {
+    if (!isAvailable) return;
+
+    // Construct query params
+    const params = new URLSearchParams({
+      productId: product.id.toString(),
+      quantity: quantity.toString(),
+      color: product.colors?.[selectedColor]?.name || "",
+      isCustomized: showCustomization ? "true" : "false",
+      customizationText: customizationText,
+    });
+
+    router.push(`/instant-buy?${params.toString()}`);
+  };
 
   const handleAddToCart = () => {
     startTransition(async () => {
@@ -67,7 +85,6 @@ export default function ProductDetailContent({
 
   return (
     <>
-      {/* 1. شريط التنقل العلوي */}
       <div className="border-y border-foreground/10 bg-muted/5">
         <div className="max-w-7xl mx-auto px-4 min-h-12 py-2 flex flex-wrap items-center justify-between gap-2">
           <nav className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest">
@@ -94,7 +111,6 @@ export default function ProductDetailContent({
 
       <div className="max-w-7xl mx-auto border-x border-foreground/10">
         <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x lg:divide-x-reverse divide-foreground/10">
-          {/* 2. قسم الوسائط الصور */}
           <div className="p-4 md:p-10 space-y-4 md:space-y-6">
             <div className="relative aspect-square border border-foreground/10 bg-muted/20 overflow-hidden">
               <Image
@@ -135,7 +151,6 @@ export default function ProductDetailContent({
             </div>
           </div>
 
-          {/* 3. المواصفات وقسم الشراء */}
           <div className="p-4 md:p-10 flex flex-col">
             <div className="flex justify-between items-start gap-4">
               <div className="space-y-1">
@@ -169,7 +184,6 @@ export default function ProductDetailContent({
 
             <div className="h-px w-full bg-foreground/10 my-6 md:my-10" />
 
-            {/* إعدادات المنتج */}
             <div className="space-y-6 md:space-y-8 flex-1">
               {product.colors && product.colors.length > 0 && (
                 <div className="space-y-4">
@@ -202,7 +216,6 @@ export default function ProductDetailContent({
                 </div>
               )}
 
-              {/* الصفات التقنية */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 border border-foreground/10 bg-muted/5 flex gap-3">
                   <Truck className="w-5 h-5 text-primary" />
@@ -228,7 +241,6 @@ export default function ProductDetailContent({
                 )}
               </div>
 
-              {/* التخصيص */}
               <div
                 className={`border-2 transition-all ${showCustomization ? "border-primary" : "border-foreground/10"}`}
               >
@@ -261,9 +273,9 @@ export default function ProductDetailContent({
               </div>
             </div>
 
-            {/* أزرار الإجراءات */}
             <div className="mt-8 md:mt-10 space-y-4">
               <div className="flex flex-col sm:flex-row gap-4">
+                {/* Quantity & Add to Cart ... existing code ... */}
                 <div className="flex items-center border-2 border-foreground h-14 md:h-16 w-full sm:w-40 bg-white">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -281,38 +293,31 @@ export default function ProductDetailContent({
                     +
                   </button>
                 </div>
+
                 <button
                   onClick={handleAddToCart}
                   disabled={!isAvailable || isPending}
-                  className=" w-full bg-foreground text-background h-14 md:h-16 font-black uppercase tracking-[0.2em] hover:bg-primary transition-colors flex items-center justify-center gap-3 disabled:opacity-20"
+                  className="w-full bg-white text-foreground border-2 border-foreground h-14 md:h-16 font-black uppercase tracking-[0.2em] hover:bg-muted transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
                 >
-                  {isPending
-                    ? "جاري المعالجة..."
-                    : isAvailable
-                      ? "إضافة للسلة"
-                      : "نفد من المخزن"}
-                  {!isPending && isAvailable && (
-                    <ShoppingBag className="w-5 h-5" />
-                  )}
+                  {isPending ? "..." : "إضافة للسلة"}
                 </button>
               </div>
 
-              {/* Total Price Box (using priceDetails) */}
-              <div className="p-4 border-2 border-primary border-dashed flex justify-between items-center font-mono text-xs">
-                <span className="uppercase opacity-50 tracking-widest">
-                  {showCustomization
-                    ? "الإجمالي النهائي (شامل الرسوم)"
-                    : "الإجمالي"}
-                </span>
-                <span className="font-black text-primary text-lg">
-                  {priceDetails.totalPrice.toLocaleString("ar-EG")} ج.م
-                </span>
-              </div>
+              {/* NEW: Instant Buy Button */}
+              <button
+                onClick={handleInstantBuy}
+                disabled={!isAvailable}
+                className="w-full bg-primary text-primary-foreground h-14 md:h-16 font-black uppercase tracking-[0.2em] hover:opacity-90 transition-opacity flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+              >
+                <span className="animate-pulse">⚡</span>
+                شراء الان{" "}
+              </button>
+
+              {/* Total Price Box ... existing code ... */}
             </div>
           </div>
         </div>
 
-        {/* 4. تفاصيل إضافية (الأسفل) */}
         <div className="border-t border-foreground/10 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-foreground/10">
           <div className="p-6 md:p-10 md:col-span-2">
             <div className="flex items-center gap-4 mb-6">

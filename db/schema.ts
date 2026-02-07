@@ -27,6 +27,7 @@ export const user = pgTable("user", {
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  isAnonymous: boolean(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -527,7 +528,6 @@ export type Address = InferSelectModel<typeof addresses>;
 export type ShippingRule = InferSelectModel<typeof shippingRules>;
 export type ProductLabel = (typeof productLabelEnum.enumValues)[number];
 export type AvailableStatus = (typeof availableStatusEnum.enumValues)[number];
-
 
 export const schema = {
   user,

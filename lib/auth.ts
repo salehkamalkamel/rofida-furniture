@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import db from "..";
 import { nextCookies } from "better-auth/next-js";
-import { admin } from "better-auth/plugins";
+import { admin, anonymous } from "better-auth/plugins";
 
 import { schema } from "@/db/schema";
 
@@ -20,5 +20,5 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
   },
-  plugins: [admin(), nextCookies()], // make sure this is the last plugin in the array
+  plugins: [admin(), nextCookies(), anonymous()], // make sure this is the last plugin in the array
 });
