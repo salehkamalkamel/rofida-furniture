@@ -21,7 +21,7 @@ export default function ProductsContent({ products }: { products: Product[] }) {
                - gap-1 on mobile for a "tight" catalog look
                - md:gap-px for the blueprint grid lines
             */
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 md:gap-px bg-foreground/10 border-b-2 border-foreground/10">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 md:gap-px p-2 md:p-4">
               {products.map((product, index) => (
                 <div
                   key={product.id}
