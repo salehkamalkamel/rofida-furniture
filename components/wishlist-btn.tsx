@@ -15,7 +15,8 @@ export function WishlistButton({ productId }: { productId: number }) {
 
   useEffect(() => {
     isProductInWishlist(productId).then((status) => {
-      setInWishlist(status);
+      const result = status.success ? status.data : false;
+      setInWishlist(result);
       setLoading(false);
     });
   }, [productId]);
@@ -25,10 +26,14 @@ export function WishlistButton({ productId }: { productId: number }) {
     startTransition(async () => {
       const result = await toggleWishlist(productId);
       if (result.success) {
-        setInWishlist(result.action === "added");
+        setInWishlist(result.data.action === "added");
         toast.success(
-          result.action === "added" ? "تمت الإضافة للمفضلة" : "تمت الإزالة",
+          result.data.action === "added"
+            ? "تمت الإضافة للمفضلة"
+            : "تمت الإزالة",
         );
+      } else {
+        toast.error(result.error);
       }
     });
   };

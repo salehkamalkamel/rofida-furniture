@@ -8,6 +8,7 @@ import OrderCtrl from "@/components/order/order-ctrl";
 
 export default async function OrdersLayout() {
   const orders = await getMyOrders();
+  console.log(orders);
 
   if (orders.length === 0) {
     return (

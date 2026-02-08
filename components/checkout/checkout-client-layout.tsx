@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FullCartResult } from "@/actions/cart-actions";
+import { FullCart } from "@/actions/cart-actions";
 import { Address } from "@/db/schema";
 import { CheckoutPricing, CheckoutStep } from "@/types/checkout";
 
@@ -34,7 +34,7 @@ export const steps: {
 ];
 
 interface CheckoutProps {
-  cartData: FullCartResult;
+  cartData: FullCart;
   addresses: Address[];
   pricing: CheckoutPricing;
   shippingRules: ShippingRules;
@@ -73,7 +73,7 @@ export default function CheckoutClientLayout({
   const validateStep = (): boolean => {
     switch (currentStep) {
       case "cart":
-        return !!(cartData.success && cartData.items.length > 0);
+        return !!(cartData.items.length > 0);
       case "shipping":
         return !!(selectedAddressId && currentShippingRule);
       case "payment":

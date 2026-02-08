@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
+  FullCart,
   FullCartResult,
   removeFromCart,
   updateCartItemQuantity,
@@ -20,7 +21,7 @@ import Link from "next/link";
 import { CartSummary } from "@/lib/pricing";
 
 interface CartPageContentProps {
-  cartData: FullCartResult;
+  cartData: FullCart;
   summary: CartSummary;
 }
 

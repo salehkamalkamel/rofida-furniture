@@ -7,7 +7,7 @@ export async function proxy(request: NextRequest) {
     headers: await headers(),
   });
 
-  if (!session) {
+  if (!session || session.user.isAnonymous) {
     return NextResponse.redirect(new URL("/auth/signin", request.url));
   }
 
@@ -22,5 +22,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"], // Specify the routes the middleware applies to
+  matcher: [
+    "/dashboard/:path*",
+    "/cart",
+    "/wishlist",
+    "/checkout/:path*",
+    "/account/:path*",
+  ],
 };

@@ -14,8 +14,8 @@ export default async function Header() {
   return (
     <HeaderLayout
       isAuthinticated={isAuthinticated}
-      cartLength={cartLength}
-      wishlistLength={wishlistLength}
+      cartLength={cartLength.data}
+      wishlistLength={wishlistLength.success ? wishlistLength.data : 0}
     />
   );
 }

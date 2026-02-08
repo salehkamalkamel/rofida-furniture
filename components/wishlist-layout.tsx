@@ -13,8 +13,6 @@ import RefreshButton from "@/components/cart-content/refresh-button";
 
 export default async function WishlistLayout() {
   const response = await getWishlist();
-  const { success, wishlistItems } = response;
-  const items = wishlistItems.map((item) => item.product);
 
   const LayoutWrapper = ({ children }: { children: React.ReactNode }) => (
     <div
@@ -30,7 +28,7 @@ export default async function WishlistLayout() {
     </div>
   );
 
-  if (!success) {
+  if (!response.success) {
     return (
       <LayoutWrapper>
         <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-destructive/20 bg-destructive/5">
@@ -52,7 +50,8 @@ export default async function WishlistLayout() {
       </LayoutWrapper>
     );
   }
-
+  const { data } = response;
+  const items = data.map((item) => item.product);
   if (items.length === 0) {
     return (
       <LayoutWrapper>

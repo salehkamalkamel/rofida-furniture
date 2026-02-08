@@ -1,6 +1,6 @@
-import { FullCartResult } from "@/actions/cart-actions";
+import { FullCart } from "@/actions/cart-actions";
 
-export function calculateCheckoutPricing(cart: FullCartResult) {
+export function calculateCheckoutPricing(cart: FullCart) {
   const subtotal = Math.round(cart.total);
   const threshold = 2000;
   const deliveryFee = subtotal >= threshold ? 0 : 150;

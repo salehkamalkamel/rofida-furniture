@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   MapPin,
-  User,
   Phone,
   CheckCircle,
   Plus,
@@ -14,40 +13,39 @@ import {
   MessageCircleIcon,
   Info,
   Banknote,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { placeInstantOrder } from "@/actions/instant-buy-actions";
-import { Address, ShippingRule } from "@/db/schema";
+import type { Address, ShippingRule } from "@/db/schema";
 import { useRouter } from "next/navigation";
+import { User as UserType } from "better-auth";
 
-// Schema for Guest/New Address
 const addressSchema = z.object({
   fullName: z.string().min(3, "الاسم مطلوب"),
   phone: z.string().min(10, "رقم الهاتف مطلوب"),
-  whatsApp: z.string().min(10, "رقم الهاتف مطلوب"),
-  street: z.string().min(5, "العنوان مطلوب"),
+  whatsApp: z.string().min(10, "رقم الواتساب مطلوب"),
+  street: z.string().min(5, "العنوان بالتفصيل مطلوب"),
   city: z.string().min(2, "المدينة مطلوبة"),
   state: z.string().min(2, "المحافظة مطلوبة"),
 });
 
 type FormData = z.infer<typeof addressSchema>;
 
-interface InstantBuyFormProps {
+type InstantBuyFormType = {
   basePrice: number;
-  user: any;
-  savedAddresses: Address[];
+  user: UserType | undefined;
+  savedAddresses: Address[] | [];
   shippingRules: ShippingRule[];
   productData: {
     productId: number;
     quantity: number;
-    color?: string;
+    color: any;
     isCustomized: boolean;
-    customizationText?: string;
-    priceAtAdd: number;
-    customizationPrice: number;
+    customizationText: string;
   };
-}
+};
 
 export function InstantBuyForm({
   basePrice,
@@ -55,77 +53,76 @@ export function InstantBuyForm({
   savedAddresses,
   shippingRules,
   productData,
-}: InstantBuyFormProps) {
+}: InstantBuyFormType) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  // Initialize address selection
+
+  useEffect(() => {
+    const initAuth = async () => {
+      const session = await authClient.getSession();
+      if (!session.data) {
+        await authClient.signIn.anonymous();
+        router.refresh();
+      }
+    };
+    if (!user) initAuth();
+  }, [user, router]);
+
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
     savedAddresses.length > 0 ? savedAddresses[0].id : null,
   );
-
   const [isNewAddressMode, setIsNewAddressMode] = useState(
     !user || savedAddresses.length === 0,
   );
-
-  // Initialize shipping rule (default to first one or based on selected address)
-  const [selectedShippingRule, setSelectedShippingRule] =
-    useState<ShippingRule>(shippingRules[0]);
+  const [selectedRule, setSelectedRule] = useState<ShippingRule>(
+    shippingRules[0],
+  );
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm<FormData>({
     resolver: zodResolver(addressSchema),
   });
 
-  const uniqueShippingRules = Array.from(
-    new Map(shippingRules.map((rule) => [rule.city, rule])).values(),
-  );
+  useEffect(() => {
+    if (!isNewAddressMode && selectedAddressId) {
+      const addr = savedAddresses.find((a: any) => a.id === selectedAddressId);
+      const rule = shippingRules.find(
+        (r: any) => r.id === addr?.shippingRuleId,
+      );
+      if (rule) setSelectedRule(rule);
+    }
+  }, [selectedAddressId, isNewAddressMode, savedAddresses, shippingRules]);
 
-  // --- Calculations ---
-  const shippingCost = Number(selectedShippingRule?.price) || 0;
-  const totalWithShipping = basePrice + shippingCost;
-
-  // Handle RHF registration manually for the select to allow custom onChange logic
-  const stateRegister = register("state");
-
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     startTransition(async () => {
-      if (!user) {
-        await authClient.signIn.anonymous();
-      }
       const result = await placeInstantOrder({
-        isGuest: !user,
         addressData: isNewAddressMode
-          ? { ...data, country: "Egypt", zip: "00000", whatsApp: data.whatsApp }
+          ? { ...data, country: "Egypt", zip: "00000" }
           : undefined,
         addressId: !isNewAddressMode
           ? (selectedAddressId ?? undefined)
           : undefined,
-        shippingRuleId: selectedShippingRule.id,
+        shippingRuleId: selectedRule.id,
         productData,
       });
 
       if (result.success && "orderId" in result) {
-        toast.success("تم تأكيد طلبك بنجاح!", {
-          description: `رقم الطلب #${result.orderId}`,
-        });
-        router.push(`/checkout/success?orderId=${result.orderId}`);
+        toast.success("تم تأكيد طلبك بنجاح!");
+        router.push(`/instant-buy/success?orderId=${result.orderId}`);
       } else {
-        toast.error(
-          (result as { success: boolean; error: string }).error ||
-            "حدث خطأ أثناء تنفيذ الطلب",
-        );
+        toast.error((result as any).error || "خطأ في الشبكة");
       }
     });
   };
 
   return (
     <div className="space-y-6">
-      {/* Header logic */}
       <div className="flex items-center gap-2 mb-4">
-        <div className="bg-foreground text-background w-6 h-6 flex items-center justify-center font-black text-xs rounded-none">
+        <div className="bg-foreground text-background w-6 h-6 flex items-center justify-center font-black text-xs">
           1
         </div>
         <h2 className="text-sm font-black uppercase tracking-widest">
@@ -133,101 +130,67 @@ export function InstantBuyForm({
         </h2>
       </div>
 
-      {/* --- NEW: Shipping & Payment Notice --- */}
-      <div className="bg-muted/30 border border-dashed border-foreground/20 p-4 rounded-sm">
-        <div className="flex gap-3 items-start">
-          <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <p>
-              <span className="font-bold text-foreground block mb-1">
-                مناطق التوصيل الحالية:
-              </span>
-              القاهرة، الجيزة، والقليوبية فقط.
-            </p>
-          </div>
+      {/* Info Boxes */}
+      <div className="bg-muted/30 border border-dashed border-foreground/20 p-4 space-y-3">
+        <div className="flex gap-3 text-xs">
+          <Info className="w-4 h-4 text-primary shrink-0" /> مناطق التوصيل:
+          القاهرة، الجيزة، القليوبية.
         </div>
-        <div className="w-full h-px bg-foreground/10 my-3" />
-        <div className="flex gap-3 items-start">
-          <Banknote className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <p>
-              <span className="font-bold text-foreground block mb-1">
-                طريقة الدفع:
-              </span>
-              الدفع عند الاستلام فقط (Cash on Delivery).
-            </p>
-          </div>
+        <div className="flex gap-3 text-xs">
+          <Banknote className="w-4 h-4 text-primary shrink-0" /> الدفع عند
+          الاستلام (COD).
         </div>
       </div>
 
-      {/* Mode 1: Logged in with Addresses */}
-      {user && !isNewAddressMode && savedAddresses.length > 0 && (
+      {user && !isNewAddressMode && savedAddresses.length > 0 ? (
         <div className="space-y-3">
-          {savedAddresses.map((addr) => (
+          {savedAddresses.map((addr: any) => (
             <div
               key={addr.id}
               onClick={() => setSelectedAddressId(addr.id)}
-              className={`cursor-pointer border-2 p-4 relative transition-all ${
-                selectedAddressId === addr.id
-                  ? "border-primary bg-primary/5"
-                  : "border-foreground/10 hover:border-foreground/30"
-              }`}
+              className={`cursor-pointer border-2 p-4 flex justify-between items-center transition-all ${selectedAddressId === addr.id ? "border-primary bg-primary/5" : "border-foreground/10"}`}
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="font-bold block text-sm">
-                    {addr.fullName}
-                  </span>
-                  <span className="text-xs text-muted-foreground block mt-1">
-                    {addr.city}, {addr.street}
-                  </span>
-                  <span className="text-xs font-mono block mt-1">
-                    {addr.phone}
-                  </span>
-                </div>
-                {selectedAddressId === addr.id && (
-                  <CheckCircle className="w-5 h-5 text-primary" />
-                )}
+              <div>
+                <p className="font-bold text-sm">{addr.fullName}</p>
+                <p className="text-xs text-muted-foreground">
+                  {addr.city}, {addr.street}
+                </p>
               </div>
+              {selectedAddressId === addr.id && (
+                <CheckCircle className="w-5 h-5 text-primary" />
+              )}
             </div>
           ))}
-
           <button
             onClick={() => setIsNewAddressMode(true)}
-            className="text-xs text-primary font-bold hover:underline flex items-center gap-1"
+            className="text-xs text-primary font-bold flex items-center gap-1"
           >
             <Plus className="w-3 h-3" /> إضافة عنوان جديد
           </button>
         </div>
-      )}
-
-      {/* Mode 2: Guest OR New Address Form */}
-      {isNewAddressMode && (
-        <form
-          id="instant-form"
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-4 animate-in fade-in slide-in-from-top-2"
-        >
-          {user && (
+      ) : (
+        <form className="space-y-4">
+          {user && savedAddresses.length > 0 && (
             <button
               type="button"
               onClick={() => setIsNewAddressMode(false)}
-              className="text-[10px] text-muted-foreground hover:text-foreground mb-2 underline"
+              className="text-[10px] underline mb-2"
             >
               الرجوع للعناوين المحفوظة
             </button>
           )}
 
           <div className="grid grid-cols-1 gap-4">
+            {/* Name Field */}
             <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase opacity-50">
+              <label className="text-[10px] font-black opacity-50 uppercase">
                 الاسم بالكامل
               </label>
               <div className="relative">
                 <User className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
                 <input
                   {...register("fullName")}
-                  className="w-full bg-white border border-foreground/20 p-2 pr-9 text-sm focus:border-primary outline-none"
+                  className="w-full bg-white border border-foreground/20 p-2 pr-9 text-sm outline-none focus:border-primary"
                   placeholder="الاسم"
                 />
               </div>
@@ -238,146 +201,115 @@ export function InstantBuyForm({
               )}
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase opacity-50">
-                رقم الهاتف (للتواصل)
-              </label>
-              <div className="relative">
-                <Phone className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
-                <input
-                  {...register("phone")}
-                  className="w-full bg-white border border-foreground/20 p-2 pr-9 text-sm focus:border-primary outline-none font-mono"
-                  placeholder="01xxxxxxxxx"
-                />
-              </div>
-              {errors.phone && (
-                <p className="text-[10px] text-destructive font-bold">
-                  {errors.phone.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase opacity-50">
-                رقم واتس اب (للتواصل)
-              </label>
-              <div className="relative">
-                <MessageCircleIcon className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
-                <input
-                  {...register("whatsApp")}
-                  className="w-full bg-white border border-foreground/20 p-2 pr-9 text-sm focus:border-primary outline-none font-mono"
-                  placeholder="01xxxxxxxxx"
-                />
-              </div>
-              {errors.phone && (
-                <p className="text-[10px] text-destructive font-bold">
-                  {errors.phone.message}
-                </p>
-              )}
-            </div>
-
+            {/* Phone & WhatsApp */}
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase opacity-50">
+                <label className="text-[10px] font-black opacity-50">
+                  رقم الهاتف
+                </label>
+                <input
+                  {...register("phone")}
+                  className="w-full border p-2 text-sm"
+                  placeholder="01..."
+                />
+                {errors.phone && (
+                  <p className="text-[10px] text-destructive">
+                    {errors.phone.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black opacity-50">
+                  واتساب
+                </label>
+                <input
+                  {...register("whatsApp")}
+                  className="w-full border p-2 text-sm"
+                  placeholder="01..."
+                />
+                {/* FIX: Correct WhatsApp error mapping */}
+                {errors.whatsApp && (
+                  <p className="text-[10px] text-destructive">
+                    {errors.whatsApp.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Region Select */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black opacity-50">
                   المحافظة
                 </label>
                 <select
-                  {...stateRegister}
+                  className="w-full border p-2 text-sm bg-white"
                   onChange={(e) => {
-                    // 1. Trigger RHF validation
-                    stateRegister.onChange(e);
-
-                    // 2. Custom logic to update price
-                    const selectedRule = shippingRules.find(
-                      (rule) => rule.city === e.target.value,
+                    const rule = shippingRules.find(
+                      (r: any) => r.city === e.target.value,
                     );
-                    if (selectedRule) {
-                      setSelectedShippingRule(selectedRule);
+                    if (rule) {
+                      setSelectedRule(rule);
+                      setValue("state", e.target.value);
                     }
                   }}
-                  className="w-full bg-white border border-foreground/20 p-2 text-sm focus:border-primary outline-none"
                 >
-                  <option value="">اختر المحافظة</option>
-                  {uniqueShippingRules.map((rule) => (
-                    <option key={rule.id} value={rule.city ?? ""}>
+                  <option value="">اختر</option>
+                  {shippingRules.map((rule: any) => (
+                    <option key={rule.id} value={rule.city}>
                       {rule.city}
                     </option>
                   ))}
                 </select>
-
-                {errors.state && (
-                  <p className="text-[10px] text-destructive font-bold">
-                    {errors.state.message}
-                  </p>
-                )}
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase opacity-50">
+                <label className="text-[10px] font-black opacity-50">
                   المدينة
                 </label>
                 <input
                   {...register("city")}
-                  className="w-full bg-white border border-foreground/20 p-2 text-sm focus:border-primary outline-none"
-                  placeholder="المعادي"
+                  className="w-full border p-2 text-sm"
                 />
-                {errors.city && (
-                  <p className="text-[10px] text-destructive font-bold">
-                    {errors.city.message}
-                  </p>
-                )}
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase opacity-50">
+              <label className="text-[10px] font-black opacity-50">
                 العنوان بالتفصيل
               </label>
-              <div className="relative">
-                <MapPin className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
-                <textarea
-                  {...register("street")}
-                  className="w-full bg-white border border-foreground/20 p-2 pr-9 text-sm focus:border-primary outline-none min-h-15"
-                  placeholder="اسم الشارع، رقم العمارة، علامة مميزة..."
-                />
-              </div>
-              {errors.street && (
-                <p className="text-[10px] text-destructive font-bold">
-                  {errors.street.message}
-                </p>
-              )}
+              <textarea
+                {...register("street")}
+                className="w-full border p-2 text-sm min-h-15"
+                placeholder="الشارع، العمارة، الشقة..."
+              />
             </div>
           </div>
         </form>
       )}
 
-      {/* --- NEW: Price Breakdown UI --- */}
-      <div className="mt-8 border-t-2 border-foreground/20 border-dashed pt-4 mx-2">
-        <div className="flex justify-between items-center text-xs text-muted-foreground mb-2">
-          <span>الشحن ({selectedShippingRule?.city || "قياسي"})</span>
-          <span className="font-mono">{shippingCost.toLocaleString()} EGP</span>
+      {/* Price Summary */}
+      <div className="mt-8 border-t-2 border-foreground/20 border-dashed pt-4">
+        <div className="flex justify-between text-xs text-muted-foreground mb-2">
+          <span>الشحن ({selectedRule?.city})</span>
+          <span>{Number(selectedRule?.price).toLocaleString()} EGP</span>
         </div>
-        <div className="flex justify-between items-center text-lg font-black uppercase">
-          <span>الإجمالي للدفع</span>
+        <div className="flex justify-between text-lg font-black">
+          <span>الإجمالي</span>
           <span className="text-primary">
-            {totalWithShipping.toLocaleString()} EGP
+            {(basePrice + Number(selectedRule?.price)).toLocaleString()} EGP
           </span>
         </div>
       </div>
 
-      {/* Actions */}
       <button
         onClick={
-          isNewAddressMode
-            ? handleSubmit(onSubmit)
-            : () => onSubmit({} as FormData)
+          isNewAddressMode ? handleSubmit(onSubmit) : () => onSubmit({} as any)
         }
         disabled={isPending}
-        className="w-full bg-foreground text-background h-14 font-black uppercase tracking-[0.2em] hover:bg-primary transition-colors flex items-center justify-center gap-3 disabled:opacity-50 mt-4"
+        className="w-full bg-foreground text-background h-14 font-black flex items-center justify-center gap-3 hover:bg-primary transition-colors disabled:opacity-50"
       >
         {isPending ? (
-          <>
-            <Loader2 className="animate-spin w-5 h-5" />
-            جاري التنفيذ...
-          </>
+          <Loader2 className="animate-spin w-5 h-5" />
         ) : (
           "تأكيد الطلب الآن"
         )}

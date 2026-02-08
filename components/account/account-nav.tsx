@@ -2,6 +2,7 @@ import { LogOut, Terminal } from "lucide-react";
 import NavModules from "./nav-modules";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import LogoutBtn from "./logout-btn";
 
 export default async function AccountNav() {
   const session = await auth.api.getSession({
@@ -36,19 +37,7 @@ export default async function AccountNav() {
         <NavModules />
 
         {/* SESSION CONTROL */}
-        <div className="p-2 border-t-2 border-foreground/10 bg-muted/10">
-          <button className="w-full group flex items-center justify-between px-4 py-3 text-destructive hover:bg-destructive hover:text-white transition-all border border-dashed border-destructive/30 hover:border-solid">
-            <div className="flex items-center gap-3">
-              <LogOut className="w-4 h-4" />
-              <span className="text-xs font-black uppercase tracking-tight">
-                تسجيل الخروج
-              </span>
-            </div>
-            <span className="text-[8px] font-mono opacity-50 group-hover:opacity-100 uppercase">
-              Exit_Session
-            </span>
-          </button>
-        </div>
+        <LogoutBtn />
 
         {/* SYSTEM DECORATION */}
         <div className="p-3 flex justify-center">

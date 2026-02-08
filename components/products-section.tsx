@@ -68,12 +68,7 @@ export default async function ProductsSection({
           )}
         </div>
 
-        {/* THE GRID: 
-            - grid-cols-2 on mobile (phone)
-            - grid-cols-4 on desktop
-            - md:gap-px + md:bg-foreground creates the industrial "grid line" effect
-        */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-px md:bg-foreground border-2 md:border-4 border-foreground shadow-[12px_12px_0px_0px_rgba(0,0,0,0.05)]">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6 md:bg-foreground border-2 md:border-4 border-foreground shadow-[12px_12px_0px_0px_rgba(0,0,0,0.05)]">
           {products.map(({ product, isInCart, isInWishlist }) => (
             <div
               key={product.id}

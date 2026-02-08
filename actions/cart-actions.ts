@@ -20,6 +20,10 @@ import { headers } from "next/headers";
 import { calculateOrderTotals } from "@/lib/pricing/calculateOrder";
 import { findShippingRule } from "./order-actions";
 
+export type ActionResult<T = undefined> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
 /**
  * GET FULL CART
  */
@@ -28,61 +32,63 @@ export type FullCartResult = {
   items: (CartItem & { product: Product })[];
   total: number;
 };
-export async function getFullCart() {
+export type FullCart = {
+  items: (CartItem & { product: Product })[];
+  total: number;
+};
+
+export async function getFullCart(): Promise<ActionResult<FullCart>> {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) return { success: false, items: [], total: 0 };
 
-    const userId = session.user.id;
+    if (!session?.user || session.user.isAnonymous) {
+      return { success: false, error: "يجب تسجيل الدخول اولا" };
+    }
 
-    const userCart = await db.query.carts.findFirst({
-      where: eq(carts.userId, userId),
-      with: {
-        items: {
-          with: { product: true },
-        },
-      },
+    const cart = await db.query.carts.findFirst({
+      where: eq(carts.userId, session.user.id),
+      with: { items: { with: { product: true } } },
     });
 
-    if (!userCart || !userCart.items)
-      return { success: true, items: [], total: 0 };
+    if (!cart?.items?.length) {
+      return { success: true, data: { items: [], total: 0 } };
+    }
 
-    // Calculate total and ensure it remains an integer
-    const total = Math.round(
-      userCart.items.reduce((acc, item) => {
-        const itemUnitPrice =
-          Number(item.priceAtAdd) + Number(item.customizationPrice);
-        return acc + itemUnitPrice * item.quantity;
-      }, 0),
-    );
+    const total = cart.items.reduce((acc, item) => {
+      const unit = Number(item.priceAtAdd) + Number(item.customizationPrice);
+      return acc + unit * item.quantity;
+    }, 0);
 
     return {
       success: true,
-      items: userCart.items,
-      total,
+      data: { items: cart.items, total: Math.round(total) },
     };
-  } catch (error) {
-    console.error("GET_CART_ERROR:", error);
-    return { success: false, items: [], total: 0 };
+  } catch (err) {
+    console.error("GET_CART_ERROR", err);
+    return { success: false, error: "فشل تحميل السلة" };
   }
 }
 
-export async function addToCart(rawInput: z.infer<typeof AddToCartSchema>) {
+export async function addToCart(
+  rawInput: z.infer<typeof AddToCartSchema>,
+): Promise<ActionResult> {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) throw new Error("يجب تسجيل الدخول أولاً");
+    if (!session?.user || session.user.isAnonymous) {
+      return { success: false, error: "يجب تسجيل الدخول أولاً" };
+    }
 
     const input = AddToCartSchema.parse(rawInput);
-    const userId = session.user.id;
 
     const product = await db.query.products.findFirst({
       where: eq(products.id, input.productId),
     });
 
     if (!product || product.stockStatus === "out_of_stock") {
-      throw new Error("المنتج غير متوفر حالياً");
+      return { success: false, error: "المنتج غير متوفر حالياً" };
     }
 
+    const userId = session.user.id;
     let userCart = await db.query.carts.findFirst({
       where: eq(carts.userId, userId),
     });
@@ -129,10 +135,10 @@ export async function addToCart(rawInput: z.infer<typeof AddToCartSchema>) {
     }
 
     revalidatePath("/cart");
-    return { success: true };
-  } catch (error) {
-    console.error("Cart Error:", error);
-    return { success: false, error: (error as Error).message };
+    return { success: true, data: undefined };
+  } catch (err) {
+    console.error("ADD_TO_CART_ERROR", err);
+    return { success: false, error: "حدث خطأ غير متوقع" };
   }
 }
 
@@ -160,7 +166,7 @@ export async function updateCartItemQuantity(
 
 export async function removeFromCart(itemId: number) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) return { success: false };
+  if (!session?.user || session.user.isAnonymous) return { success: false };
 
   const cart = await db.query.carts.findFirst({
     where: eq(carts.userId, session.user.id),
@@ -178,12 +184,13 @@ export async function removeFromCart(itemId: number) {
   return { success: true };
 }
 
-// get cart items count for a user
-// get cart items count for a user
 export async function getCartItemsCount() {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) return 0;
+    if (!session?.user || session.user.isAnonymous) {
+      console.error("user is not authinticated or Anonymous");
+      return { success: false, data: 0 };
+    }
 
     const userId = session.user.id;
 
@@ -198,13 +205,14 @@ export async function getCartItemsCount() {
       },
     });
 
-    if (!cart?.items?.length) return 0;
-
-    // Sum quantities (recommended)
-    return cart.items.reduce((acc, item) => acc + item.quantity, 0);
-  } catch (error) {
-    console.error("GET_CART_COUNT_ERROR:", error);
-    return 0;
+    if (!cart?.items?.length) {
+      return { success: true, data: 0 };
+    }
+    const count = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+    return { success: true, data: count };
+  } catch {
+    console.error("Field to get cart data unexpected error");
+    return { success: false, data: 0 };
   }
 }
 
@@ -212,7 +220,7 @@ export async function getCartItemsCount() {
 export async function isProductInCart(productId: number) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) return false;
+    if (!session?.user || session.user.isAnonymous) return false;
 
     const userId = session.user.id;
 
@@ -239,7 +247,8 @@ export async function isProductInCart(productId: number) {
 
 export async function getCartSummary(addressId?: number) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
+  if (!session?.user || session.user.isAnonymous)
+    throw new Error("Unauthorized");
 
   const cart = await db.query.carts.findFirst({
     where: eq(carts.userId, session.user.id),

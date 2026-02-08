@@ -1,4 +1,4 @@
-import { FullCartResult } from "@/actions/cart-actions";
+import { FullCart } from "@/actions/cart-actions";
 import Image from "next/image";
 import Link from "next/link";
 import { Edit3, ArrowLeft, Package } from "lucide-react";
@@ -6,7 +6,7 @@ import { Edit3, ArrowLeft, Package } from "lucide-react";
 export default function CheckoutCartSummary({
   cartData,
 }: {
-  cartData: FullCartResult;
+  cartData: FullCart;
 }) {
   const items = cartData.items;
 

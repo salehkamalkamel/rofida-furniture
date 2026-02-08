@@ -4,15 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/db/schema";
-import {
-  ShoppingBag,
-  Truck,
-  Ruler,
-  Clock,
-  Edit3,
-  Check,
-  Info,
-} from "lucide-react";
+import { Truck, Ruler, Clock, Edit3, Check, Info } from "lucide-react";
 import { addToCart } from "@/actions/cart-actions";
 import { toast } from "sonner";
 import { calculatePrice } from "@/lib/pricing";
@@ -312,8 +304,6 @@ export default function ProductDetailContent({
                 <span className="animate-pulse">⚡</span>
                 شراء الان{" "}
               </button>
-
-              {/* Total Price Box ... existing code ... */}
             </div>
           </div>
         </div>

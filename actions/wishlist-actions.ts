@@ -1,12 +1,27 @@
 "use server";
-import { isDynamicUsageError } from "next/dist/export/helpers/is-dynamic-usage-error";
+
 import { auth } from "@/lib/auth";
-import { wishlists, wishlistItems } from "@/db/schema";
+import {
+  wishlists,
+  wishlistItems,
+  carts,
+  cartItems,
+  products,
+} from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import db from "..";
-import { carts, cartItems } from "@/db/schema";
+import { ActionResult } from "./cart-actions";
+
+/**
+ * Helper to handle session and unauthorized state
+ */
+async function getAuthenticatedUser() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user || session.user.isAnonymous) return null;
+  return session.user.id;
+}
 
 export async function moveToCart({
   wishlistItemId,
@@ -14,22 +29,21 @@ export async function moveToCart({
 }: {
   wishlistItemId?: number;
   productId?: number;
-}) {
+}): Promise<ActionResult> {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) return { success: false, error: "Unauthorized" };
+    const userId = await getAuthenticatedUser();
+    if (!userId) return { success: false, error: "يجب تسجيل الدخول أولاً" };
 
-    const userId = session.user.id;
-
-    // 1. Database Transaction to ensure both operations succeed or fail together
     return await db.transaction(async (tx) => {
-      // 2. Find the Wishlist Item & Product Price
+      // 1. Find Wishlist
       const wishlist = await tx.query.wishlists.findFirst({
         where: eq(wishlists.userId, userId),
       });
 
-      if (!wishlist) throw new Error("Wishlist not found");
+      if (!wishlist)
+        return { success: false, error: "قائمة الأمنيات غير موجودة" };
 
+      // 2. Find Item
       const wishItem = await tx.query.wishlistItems.findFirst({
         where: and(
           eq(wishlistItems.wishlistId, wishlist.id),
@@ -41,7 +55,7 @@ export async function moveToCart({
       });
 
       if (!wishItem)
-        return { success: false, error: "Item not found in wishlist" };
+        return { success: false, error: "المنتج غير موجود في قائمة الأمنيات" };
 
       // 3. Ensure User has a Cart
       let userCart = await tx.query.carts.findFirst({
@@ -52,51 +66,50 @@ export async function moveToCart({
         [userCart] = await tx.insert(carts).values({ userId }).returning();
       }
 
-      // 4. Check if product already in cart to handle duplicates
+      // 4. Move logic
       const existingCartItem = await tx.query.cartItems.findFirst({
         where: and(
-          eq(cartItems.cartId, userCart.id),
+          eq(cartItems.cartId, userCart!.id),
           eq(cartItems.productId, wishItem.productId),
         ),
       });
 
       if (existingCartItem) {
-        // Option A: Just increment quantity
         await tx
           .update(cartItems)
           .set({ quantity: existingCartItem.quantity + 1 })
           .where(eq(cartItems.id, existingCartItem.id));
       } else {
-        // Option B: Insert new cart item
         await tx.insert(cartItems).values({
-          cartId: userCart.id,
+          cartId: userCart!.id,
           productId: wishItem.productId,
           quantity: 1,
-          priceAtAdd: wishItem.product.price, // Uses current price from joined product
+          priceAtAdd: Math.round(
+            Number(wishItem.product.salePrice || wishItem.product.price),
+          ).toString(),
         });
       }
 
-      // 5. Remove from Wishlist
+      // 5. Cleanup
       await tx.delete(wishlistItems).where(eq(wishlistItems.id, wishItem.id));
 
       revalidatePath("/wishlist");
       revalidatePath("/cart");
-
-      return { success: true };
+      return { success: true, data: undefined };
     });
   } catch (error) {
-    console.error("Move to Cart Error:", error);
-    return { success: false, error: "Could not move item to cart" };
+    console.error("MOVE_TO_CART_ERROR:", error);
+    return { success: false, error: "فشل نقل المنتج إلى السلة" };
   }
 }
-export async function toggleWishlist(productId: number) {
+
+export async function toggleWishlist(
+  productId: number,
+): Promise<ActionResult<{ action: "added" | "removed" }>> {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) return { success: false, error: "Unauthorized" };
+    const userId = await getAuthenticatedUser();
+    if (!userId) return { success: false, error: "يجب تسجيل الدخول أولاً" };
 
-    const userId = session.user.id;
-
-    // 1. Ensure User Has a Wishlist
     let wishlist = await db.query.wishlists.findFirst({
       where: eq(wishlists.userId, userId),
     });
@@ -105,7 +118,6 @@ export async function toggleWishlist(productId: number) {
       [wishlist] = await db.insert(wishlists).values({ userId }).returning();
     }
 
-    // 2. Check if item exists
     const existingItem = await db.query.wishlistItems.findFirst({
       where: and(
         eq(wishlistItems.wishlistId, wishlist.id),
@@ -114,113 +126,44 @@ export async function toggleWishlist(productId: number) {
     });
 
     if (existingItem) {
-      // REMOVE IT
       await db
         .delete(wishlistItems)
         .where(eq(wishlistItems.id, existingItem.id));
-      revalidatePath("/");
       revalidatePath("/wishlist");
-      revalidatePath("/products"); // Update heart icons on product lists
-      return { success: true, action: "removed" };
+      revalidatePath("/products");
+      return { success: true, data: { action: "removed" } };
     } else {
-      // ADD IT
       await db.insert(wishlistItems).values({
         wishlistId: wishlist.id,
         productId,
       });
-      revalidatePath("/");
-
       revalidatePath("/wishlist");
       revalidatePath("/products");
-      return { success: true, action: "added" };
+      return { success: true, data: { action: "added" } };
     }
   } catch (error) {
-    console.error("Wishlist Error:", error);
-    return { success: false, error: "Something went wrong" };
+    console.error("TOGGLE_WISHLIST_ERROR:", error);
+    return { success: false, error: "حدث خطأ أثناء تحديث قائمة الأمنيات" };
   }
 }
 
-export async function getWishlist() {
+export async function getWishlist(): Promise<ActionResult<any[]>> {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-
-    // Pattern Match: Return consistent empty state if no user
-    if (!session?.user) {
-      return { success: false, wishlistItems: [] };
-    }
-
-    const userId = session.user.id;
+    const userId = await getAuthenticatedUser();
+    if (!userId) return { success: false, error: "يجب تسجيل الدخول أولاً" };
 
     const wishlistData = await db.query.wishlists.findFirst({
       where: eq(wishlists.userId, userId),
-      with: {
-        items: {
-          with: {
-            product: true,
-          },
-        },
-      },
+      with: { items: { with: { product: true } } },
     });
-
-    // Pattern Match: Return success true but empty array if no wishlist exists yet
-    if (!wishlistData || !wishlistData.items) {
-      return { success: true, wishlistItems: [] };
-    }
 
     return {
       success: true,
-      wishlistItems: wishlistData.items,
+      data: wishlistData?.items || [],
     };
   } catch (error) {
-    // Standardized Error Logging
     console.error("GET_WISHLIST_ERROR:", error);
-
-    return { success: false, wishlistItems: [] };
-  }
-}
-// check if a product is in the user's wishlist
-export async function isProductInWishlist(productId: number) {
-  try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) return false;
-    const userId = session.user.id;
-
-    const wishlist = await db.query.wishlists.findFirst({
-      where: eq(wishlists.userId, userId),
-    });
-
-    if (!wishlist) return false;
-
-    const existingItem = await db.query.wishlistItems.findFirst({
-      where: and(
-        eq(wishlistItems.wishlistId, wishlist.id),
-        eq(wishlistItems.productId, productId),
-      ),
-    });
-
-    return !!existingItem;
-  } catch (error) {
-    console.error("Is Product in Wishlist Error:", error);
-    return false;
-  }
-}
-
-export async function getWishlistItemsCount() {
-  try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) return 0;
-    const userId = session.user.id;
-    const wishlist = await db.query.wishlists.findFirst({
-      where: eq(wishlists.userId, userId),
-      with: {
-        items: true,
-      },
-    });
-
-    return wishlist?.items.length || 0;
-  } catch (error) {
-    console.error("Get Wishlist Items Count Error:", error);
-    return 0;
+    return { success: false, error: "فشل تحميل قائمة الأمنيات" };
   }
 }
 
@@ -230,47 +173,83 @@ export async function removeFromWishlist({
 }: {
   itemId?: number;
   productId?: number;
-}) {
+}): Promise<ActionResult> {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) return { success: false, error: "Unauthorized" };
+    const userId = await getAuthenticatedUser();
+    if (!userId) return { success: false, error: "يجب تسجيل الدخول أولاً" };
 
-    const userId = session.user.id;
-
-    // 1. Get the user's wishlist ID first to ensure ownership
     const wishlist = await db.query.wishlists.findFirst({
       where: eq(wishlists.userId, userId),
     });
 
-    if (!wishlist) return { success: false, error: "Wishlist not found" };
+    if (!wishlist)
+      return { success: false, error: "قائمة الأمنيات غير موجودة" };
 
-    // 2. Build the delete condition dynamically
     const conditions = [eq(wishlistItems.wishlistId, wishlist.id)];
+    if (itemId) conditions.push(eq(wishlistItems.id, itemId));
+    else if (productId) conditions.push(eq(wishlistItems.productId, productId));
+    else return { success: false, error: "بيانات المنتج غير مكتملة" };
 
-    if (itemId) {
-      conditions.push(eq(wishlistItems.id, itemId));
-    } else if (productId) {
-      conditions.push(eq(wishlistItems.productId, productId));
-    } else {
-      return { success: false, error: "Provide either Item ID or Product ID" };
-    }
-
-    // 3. Execute delete with safety check (must belong to user's wishlist)
     const result = await db
       .delete(wishlistItems)
       .where(and(...conditions))
       .returning();
 
-    if (result.length === 0) {
-      return { success: false, error: "Item not found" };
-    }
+    if (result.length === 0)
+      return { success: false, error: "المنتج غير موجود" };
 
     revalidatePath("/wishlist");
     revalidatePath("/products");
-
-    return { success: true };
+    return { success: true, data: undefined };
   } catch (error) {
-    console.error("Remove From Wishlist Error:", error);
-    return { success: false, error: "Something went wrong" };
+    console.error("REMOVE_WISHLIST_ERROR:", error);
+    return { success: false, error: "حدث خطأ أثناء الحذف" };
+  }
+}
+
+export async function isProductInWishlist(
+  productId: number,
+): Promise<ActionResult<boolean>> {
+  try {
+    const userId = await getAuthenticatedUser();
+
+    if (!userId) return { success: true, data: false };
+
+    const wishlist = await db.query.wishlists.findFirst({
+      where: eq(wishlists.userId, userId),
+    });
+
+    if (!wishlist) return { success: true, data: false };
+
+    const existingItem = await db.query.wishlistItems.findFirst({
+      where: and(
+        eq(wishlistItems.wishlistId, wishlist.id),
+        eq(wishlistItems.productId, productId),
+      ),
+    });
+
+    return { success: true, data: !!existingItem };
+  } catch (error) {
+    console.error("IS_PRODUCT_IN_WISHLIST_ERROR:", error);
+    return { success: false, error: "فشل التحقق من حالة المنتج" };
+  }
+}
+
+export async function getWishlistItemsCount(): Promise<ActionResult<number>> {
+  try {
+    const userId = await getAuthenticatedUser();
+    if (!userId) return { success: true, data: 0 };
+
+    const wishlist = await db.query.wishlists.findFirst({
+      where: eq(wishlists.userId, userId),
+      with: {
+        items: true,
+      },
+    });
+
+    return { success: true, data: wishlist?.items.length || 0 };
+  } catch (error) {
+    console.error("GET_WISHLIST_COUNT_ERROR:", error);
+    return { success: false, error: "فشل تحديث عدد المنتجات" };
   }
 }

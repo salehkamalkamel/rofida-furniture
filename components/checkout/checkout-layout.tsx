@@ -55,7 +55,7 @@ export default async function CheckoutLayout() {
   }
 
   const cart = await getFullCart();
-  if (!cart.success || cart.items.length === 0) {
+  if (!cart.success || cart.data.items.length === 0) {
     return (
       <div className="min-h-screen flex flex-col">
         <main className="flex-1 bg-background flex items-center justify-center">
@@ -108,12 +108,12 @@ export default async function CheckoutLayout() {
   }
 
   const addresses = await getUserAddresses();
-  const pricing = calculateCheckoutPricing(cart);
+  const pricing = calculateCheckoutPricing(cart.data);
   const shippingRules = await getAllShippingRules();
 
   return (
     <CheckoutClientLayout
-      cartData={cart}
+      cartData={cart.data}
       addresses={addresses}
       pricing={pricing}
       shippingRules={shippingRules}

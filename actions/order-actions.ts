@@ -192,7 +192,6 @@ export async function getOrderById(orderId: number) {
 export async function getMyOrders() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) throw new Error("Unauthorized");
-
   return await db.query.orders.findMany({
     where: eq(orders.userId, session.user.id),
     with: {

@@ -7,7 +7,6 @@ import RefreshButton from "./refresh-button";
 
 export default async function CartLayout() {
   const cartData = await getFullCart();
-  const { items, total, success } = cartData;
 
   const LayoutWrapper = ({ children }: { children: React.ReactNode }) => (
     <div
@@ -23,7 +22,7 @@ export default async function CartLayout() {
     </div>
   );
 
-  if (!success) {
+  if (!cartData.success) {
     return (
       <LayoutWrapper>
         <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-destructive/20 bg-destructive/5">
@@ -45,6 +44,7 @@ export default async function CartLayout() {
       </LayoutWrapper>
     );
   }
+  const { items, total } = cartData.data;
 
   if (items.length === 0) {
     return (
@@ -93,7 +93,7 @@ export default async function CartLayout() {
         </div>
       </div>
 
-      <CartPageContent cartData={cartData} summary={summary} />
+      <CartPageContent cartData={cartData.data} summary={summary} />
     </LayoutWrapper>
   );
 }

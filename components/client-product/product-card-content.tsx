@@ -41,7 +41,11 @@ export default function ProductCardContent({
           quantity: 1,
           isCustomized: false,
         });
-        if (result.success) toast.success("تمت الإضافة إلى السلة");
+        if (result.success) {
+          toast.success("تمت الإضافة إلى السلة");
+        } else {
+          toast.error(result.error);
+        }
       }
     });
   };
@@ -53,8 +57,12 @@ export default function ProductCardContent({
       const result = await toggleWishlist(product.id);
       if (result.success) {
         toast.success(
-          result.action === "added" ? "تمت الإضافة للمفضلة" : "تمت الإزالة",
+          result.data.action === "added"
+            ? "تمت الإضافة للمفضلة"
+            : "تمت الإزالة",
         );
+      } else {
+        toast.error(result.error);
       }
     });
   };

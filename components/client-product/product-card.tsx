@@ -10,7 +10,7 @@ export default async function ProductCard({ product }: { product: Product }) {
   return (
     <ProductCardContent
       product={product}
-      isInWishlist={isInWishlist}
+      isInWishlist={isInWishlist.success ? isInWishlist.data : false}
       isInCart={isInCart}
     />
   );
