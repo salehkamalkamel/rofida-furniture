@@ -1,13 +1,10 @@
-import React, { Suspense } from "react";
+import React from "react";
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 import { Toaster } from "@/components/ui/sonner";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
-import HeaderSkeleton from "@/components/skeleton/header-skeleton";
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
@@ -16,10 +13,26 @@ const ibmPlexArabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "دار | أثاث عصري بتصميم اسكندنافي",
+  title: "روفيدا للأثاث | أثاث عصري بجودة عالية وأسعار تنافسية في مصر",
   description:
-    "متجر أثاث عصري بتصميم اسكندنافي بسيط وأنيق. اكتشف مجموعتنا المتنوعة من الأثاث المنزلي عالي الجودة.",
-  generator: "v0.app",
+    "روفيدا للأثاث بتقدّم أثاث عصري بتصميمات أنيقة وجودة عالية وأسعار تنافسية جدًا. شحن لجميع أنحاء مصر (القاهرة – الجيزة – القليوبية)، مع ضمان على جميع المنتجات.",
+  keywords: [
+    "روفيدا للأثاث",
+    "أثاث عصري",
+    "أثاث مودرن",
+    "أثاث منزلي",
+    "غرف نوم",
+    "تربيزة تلفزيون",
+    "تسريحات",
+    "مكاتب",
+    "أثاث في مصر",
+    "أثاث القاهرة",
+    "أثاث القليوبية",
+  ],
+  authors: [{ name: "Rovida Furniture" }],
+  creator: "روفيدا للأثاث",
+  publisher: "روفيدا للأثاث",
+  generator: "Next.js",
   icons: {
     icon: [
       {

@@ -1,6 +1,7 @@
 export const navList = [
   { name: "المنتجات", href: "/products" },
-  { name: "مكاتب", href: "/products?category=office" },
-  { name: "غرفة النوم", href: "/products?category=bedroom" },
-  { name: "غرفة المعيشة", href: "/products?category=living-room" },
+  { name: "مكاتب", href: "/products?category=desk" },
+  { name: "سراير", href: "/products?category=beds" },
+  { name: "جزامات", href: "/products?category=shoe_rack" },
+  { name: "اكسسوارات", href: "/products?category=accessories" },
 ];

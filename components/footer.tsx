@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Instagram, Facebook, Twitter, ArrowUpLeft } from "lucide-react";
+import { navList } from "@/lib/data/header-data";
 
 export default function Footer() {
   return (
@@ -27,7 +28,7 @@ export default function Footer() {
           </div>
           <div className="flex-1 p-8 md:p-12 flex flex-col justify-between">
             <div className="text-6xl md:text-8xl font-black opacity-10 leading-none">
-              DAR / دار
+              ROFIDA / روفيدا للأثاث
             </div>
             <p className="text-[10px] font-bold tracking-[0.4em] uppercase opacity-40 mt-4">
               Industrial Grade Furniture • Designed in Cairo
@@ -78,21 +79,19 @@ export default function Footer() {
             </h4>
             {/* Section 3: Categories */}
             <ul className="space-y-4">
-              {["غرفة المعيشة", "غرفة النوم", "غرفة الطعام", "المكتب"].map(
-                (item, index) => (
-                  <li key={item}>
-                    <Link
-                      href="#"
-                      className="text-sm font-black uppercase tracking-tighter hover:text-primary transition-colors flex items-center justify-between group"
-                    >
-                      {item}
-                      <span className="text-[10px] opacity-20 font-mono">
-                        [0{index + 1}]
-                      </span>
-                    </Link>
-                  </li>
-                ),
-              )}
+              {navList.map((item, index) => (
+                <li key={item.href + item.name}>
+                  <Link
+                    href={item.href}
+                    className="text-sm font-black uppercase tracking-tighter hover:text-primary transition-colors flex items-center justify-between group"
+                  >
+                    {item.name}
+                    <span className="text-[10px] opacity-20 font-mono">
+                      [0{index + 1}]
+                    </span>
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -106,7 +105,14 @@ export default function Footer() {
                 <span className="block text-[10px] opacity-40 uppercase mb-1">
                   Location
                 </span>
-                <span className="text-sm font-bold">القاهرة، مصر</span>
+                <Link
+                  href="https://maps.app.goo.gl/D5GYJWWRwLWshQvt9"
+                  className="hover:text-primary"
+                >
+                  <span className="text-sm font-bold">
+                    مصر ، القاهرة ، البساتين
+                  </span>
+                </Link>
               </div>
               <div>
                 <span className="block text-[10px] opacity-40 uppercase mb-1">
@@ -129,7 +135,7 @@ export default function Footer() {
         {/* Final Bottom Bar */}
         <div className="border-t border-background/10 p-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
-            © 2026 DAR INDUSTRIAL DESIGN. ALL RIGHTS RESERVED.
+            © 2026 ROFIDA_FURNITURE INDUSTRIAL DESIGN. ALL RIGHTS RESERVED.
           </p>
           <div className="flex gap-8">
             <Link
