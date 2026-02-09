@@ -29,10 +29,6 @@ export default function HeroCarousel() {
 
   return (
     <section
-      /* MOBILE CHANGE: Changed h-[80vh] to h-[50vh] sm:h-[60vh] 
-         This ensures users see the "next" section (likely products) 
-         peeking up from the bottom.
-      */
       className="relative w-full h-[55vh] md:h-[90vh] overflow-hidden bg-foreground group border-b-4 border-primary"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}

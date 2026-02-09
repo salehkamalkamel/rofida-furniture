@@ -49,6 +49,15 @@ export const categories: Category[] = [
     productCount: 89,
   },
   {
+    id: "tables",
+    name: "تربيزات",
+    nameEn: "tables",
+    icon: "tables",
+    image:
+      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770622127/WhatsApp_Image_2026-02-08_at_3.43.12_PM_epslym.jpg",
+    productCount: 89,
+  },
+  {
     id: "wardrobe",
     name: "دولاب",
     nameEn: "wardrobe",
@@ -413,28 +422,28 @@ export const products: Product[] = [
 export const heroSlides = [
   {
     id: 1,
-    title: "تصميم  أصيل",
+    title: "تصميم جذاب ومتين",
     subtitle: "اكتشف مجموعتنا الجديدة من الأثاث العصري",
     image:
-      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1600&h=800&fit=crop",
+      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770623361/mid-century-modern-living-room-with-armchair-lamp_pjt4zm.jpg",
     cta: "تسوق الآن",
     link: "/products",
   },
   {
     id: 2,
     title: "خصومات تصل إلى 30%",
-    subtitle: "على مجموعة مختارة من غرف النوم",
+    subtitle: "على منتجات مختارة",
     image:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1600&h=800&fit=crop",
+      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770623137/129804_spheyz.jpg",
     cta: "اكتشف العروض",
-    link: "/products?category=bedroom",
+    link: "/products",
   },
   {
     id: 3,
-    title: "غرفة المعيشة المثالية",
+    title: "اسعار تنافسية وجودة عالية",
     subtitle: "أثاث مريح بأسعار مناسبة",
     image:
-      "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1600&h=800&fit=crop",
+      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770623251/98164_c7xd8u.jpg",
     cta: "استعرض المجموعة",
     link: "/products?category=living-room",
   },
