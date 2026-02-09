@@ -45,6 +45,7 @@ export async function generateStaticParams() {
   const products = await db.query.products.findMany();
   return products.map((product) => ({ id: String(product.id) }));
 }
+
 export default async function ProductDetailPage({
   params,
 }: {
@@ -53,8 +54,34 @@ export default async function ProductDetailPage({
   const { id } = await params;
   const product = await getProductById(Number(id));
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.images?.[0],
+    description: product.detailedDescription,
+    brand: {
+      "@type": "Brand",
+      name: "روفيدا للأثاث",
+    },
+    offers: {
+      "@type": "Offer",
+      price: product.price,
+      priceCurrency: "EGP",
+      availability: true
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      url: `https://rofida-furniture.vercel.app/products/${product.id}`,
+    },
+  };
+
   return (
     <main className="min-h-screen bg-background text-foreground" dir="rtl">
+      {/* Structured Data for Google */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ProductDetailContent product={product} similarProducts={[product]} />
       <ProductsSection
         category={product.category}
