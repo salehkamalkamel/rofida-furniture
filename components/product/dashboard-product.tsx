@@ -3,10 +3,7 @@ import { Product } from "@/db/schema";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import {
-  deleteProduct,
-  updateProduct,
-} from "@/app/dashboard/products/new/_actions";
+import { deleteProduct, updateProduct } from "@/actions/_actions";
 import { ExternalLink, Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function DashBoardProduct({ product }: { product: Product }) {

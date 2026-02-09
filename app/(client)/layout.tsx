@@ -1,7 +1,6 @@
 import Footer from "@/components/footer";
 import Header from "@/components/header";
-import HeaderSkeleton from "@/components/skeleton/header-skeleton";
-import { ReactNode, Suspense } from "react";
+import { ReactNode } from "react";
 
 export default function ClientLayout({
   children,
@@ -10,9 +9,7 @@ export default function ClientLayout({
 }>) {
   return (
     <>
-      <Suspense fallback={<HeaderSkeleton />}>
-        <Header />
-      </Suspense>
+      <Header />
       {children}
       <Footer />
     </>

@@ -1,5 +1,5 @@
 import ProductsContent from "@/components/client-products/client-products-content";
-import { getFilteredProductsClient } from "./_actions";
+import { getFilteredProductsClient } from "../../../actions/products-server-actions";
 
 export default async function ProductsPage({
   searchParams,

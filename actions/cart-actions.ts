@@ -135,6 +135,8 @@ export async function addToCart(
     }
 
     revalidatePath("/cart");
+    revalidatePath("/products");
+    revalidatePath("/");
     return { success: true, data: undefined };
   } catch (err) {
     console.error("ADD_TO_CART_ERROR", err);

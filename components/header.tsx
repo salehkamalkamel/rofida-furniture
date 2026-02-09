@@ -1,21 +1,35 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import HeaderLayout from "./header-layout";
 import { getCartItemsCount } from "@/actions/cart-actions";
 import { getWishlistItemsCount } from "@/actions/wishlist-actions";
-import HeaderLayout from "./header-layout";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { authClient } from "@/lib/auth-client";
 
-export default async function Header() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  const cartLength = (await getCartItemsCount()) || 0;
-  const wishlistLength = (await getWishlistItemsCount()) || 0;
-  const isAuthinticated = Boolean(session?.user);
+export default function Header() {
+  const [cartLength, setCartLength] = useState(0);
+  const [wishlistLength, setWishlistLength] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    authClient.getSession().then((session) => {
+      setIsAuthenticated(Boolean(session));
+    });
+
+    getCartItemsCount().then((res) => {
+      setCartLength(res?.data ?? 0);
+    });
+
+    getWishlistItemsCount().then((res) => {
+      setWishlistLength(res.success ? res.data : 0);
+    });
+  }, []);
+
   return (
     <HeaderLayout
-      isAuthinticated={isAuthinticated}
-      cartLength={cartLength.data}
-      wishlistLength={wishlistLength.success ? wishlistLength.data : 0}
+      isAuthinticated={isAuthenticated}
+      cartLength={cartLength}
+      wishlistLength={wishlistLength}
     />
   );
 }

@@ -4,7 +4,10 @@ import { products } from "@/db/schema"; // Path to your schema
 import { eq, desc, and, ilike, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import db from "@/index";
-import { ProductFormValues, productSchema } from "./_schema";
+import {
+  ProductFormValues,
+  productSchema,
+} from "../app/dashboard/products/new/_schema";
 import { generateSlug } from "@/lib/healpers";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";

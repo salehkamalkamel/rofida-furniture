@@ -1,4 +1,4 @@
-import { getProductById } from "@/app/dashboard/products/new/_actions";
+import { getProductById } from "@/actions/_actions";
 import ProductDetailContent from "@/components/client-product/product-details-content";
 import ProductsSection from "@/components/products-section";
 import db from "@/index";

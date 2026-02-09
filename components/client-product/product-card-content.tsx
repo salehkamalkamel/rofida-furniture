@@ -4,65 +4,39 @@ import React, { useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/db/schema";
+import { calculatePrice } from "@/lib/pricing";
 import { addToCart } from "@/actions/cart-actions";
 import { toast } from "sonner";
-import { Heart, Loader, Plus, Trash2 } from "lucide-react";
-import { toggleWishlist } from "@/actions/wishlist-actions";
-import { calculatePrice } from "@/lib/pricing";
+import { Plus, Loader2 } from "lucide-react";
 
-export default function ProductCardContent({
-  product,
-  isInWishlist,
-  isInCart,
-}: {
-  product: Product;
-  isInWishlist: boolean;
-  isInCart: boolean;
-}) {
-  const [isPendingCart, startCartTransition] = useTransition();
-  const [isPendingWishlist, startWishlistTransition] = useTransition();
+export default function ProductCardContent({ product }: { product: Product }) {
+  const [isPending, startTransition] = useTransition();
+
   const priceDetails = calculatePrice(product, 1, false);
-  const basePrice = priceDetails.basePrice;
-  const salePrice = priceDetails.finalUnitPrice;
-  const currentPrice = salePrice;
-  const originalPrice = basePrice;
+  const currentPrice = priceDetails.finalUnitPrice;
+  const originalPrice = priceDetails.basePrice;
   const mainImage = product.images?.[0] || "/placeholder.svg";
 
-  const handleToggleCart = (e: React.MouseEvent) => {
+  const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    startCartTransition(async () => {
-      if (isInCart) {
-        toast.success("العنصر موجود في السلة");
-        return;
-      } else {
+
+    startTransition(async () => {
+      try {
         const result = await addToCart({
           productId: product.id,
           quantity: 1,
           isCustomized: false,
         });
-        if (result.success) {
-          toast.success("تمت الإضافة إلى السلة");
-        } else {
-          toast.error(result.error);
-        }
-      }
-    });
-  };
 
-  const handleToggleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    startWishlistTransition(async () => {
-      const result = await toggleWishlist(product.id);
-      if (result.success) {
-        toast.success(
-          result.data.action === "added"
-            ? "تمت الإضافة للمفضلة"
-            : "تمت الإزالة",
-        );
-      } else {
-        toast.error(result.error);
+        if (result.success) {
+          toast.success("تمت الإضافة إلى السلة", {
+            description: product.name,
+            position: "bottom-right",
+          });
+        }
+      } catch (error) {
+        toast.error("عذراً، حدث خطأ ما");
       }
     });
   };
@@ -75,7 +49,7 @@ export default function ProductCardContent({
   };
 
   return (
-    <div className="group relative bg-background border  md:hover:border-primary transition-colors duration-300 flex flex-col h-full border-foreground/10">
+    <div className="group relative bg-background border border-foreground/10 md:hover:border-primary transition-all duration-300 flex flex-col h-full overflow-hidden">
       <Link href={`/products/${product.id}`} className="block flex-1">
         {/* Image Container */}
         <div className="relative aspect-square bg-muted overflow-hidden border-b border-border">
@@ -84,68 +58,45 @@ export default function ProductCardContent({
             alt={product.name}
             fill
             className="object-cover transition-transform duration-700 md:group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, 25vw" // Updated sizes
+            sizes="(max-width: 640px) 50vw, 25vw"
           />
 
-          {/* Badges - Smaller on mobile */}
-          <div className="absolute top-0 right-0 flex flex-col z-10">
-            {product.label && (
-              <span className="bg-primary text-primary-foreground px-1.5 sm:px-3 py-0.5 sm:py-1 text-[8px] sm:text-[10px] font-black uppercase tracking-widest">
+          {/* Badge */}
+          {product.label && (
+            <div className="absolute top-0 right-0 z-10">
+              <span className="bg-primary text-primary-foreground px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] font-black uppercase tracking-tighter sm:tracking-widest shadow-md">
                 {labelMap[product.label]}
               </span>
-            )}
-          </div>
-
-          {/* Wishlist - Smaller on mobile */}
-          <button
-            disabled={isPendingWishlist}
-            onClick={handleToggleWishlist}
-            className={`absolute bottom-2 left-2 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center transition-all border ${
-              isInWishlist
-                ? "bg-offer border-offer text-white"
-                : "bg-white/90 backdrop-blur-sm border-border text-foreground"
-            }`}
-          >
-            {isPendingWishlist ? (
-              <Loader className="w-3 h-3 animate-spin" />
-            ) : (
-              <Heart
-                className={`w-4 h-4 sm:w-5 sm:h-5 ${isInWishlist ? "fill-current" : ""}`}
-              />
-            )}
-          </button>
+            </div>
+          )}
         </div>
 
         {/* Product Info */}
-        <div className="p-2 sm:p-4 flex flex-col flex-1">
-          <div className="mb-1 sm:mb-2">
-            <h3 className="text-xs sm:text-base font-black text-foreground leading-tight uppercase tracking-tighter line-clamp-1">
+        <div className="p-3 sm:p-4 flex flex-col flex-1">
+          <div className="mb-2">
+            <h3 className="text-[11px] sm:text-base font-black text-foreground/80 leading-tight uppercase tracking-tighter line-clamp-1 group-hover:text-primary transition-colors">
               {product.name}
             </h3>
-            {/* HIDDEN ON MOBILE: Brief Description */}
-            <p className="hidden sm:line-clamp-2 text-xs text-muted-foreground mt-1 min-h-8">
-              {product.briefDescription}
-            </p>
           </div>
 
-          <div className="mt-auto flex items-center justify-between">
+          <div className="mt-auto flex items-end justify-between">
             <div className="flex flex-col">
-              {originalPrice && (
-                <span className="text-[10px] sm:text-xs text-muted-foreground line-through">
-                  {originalPrice.toLocaleString("ar-EG")}
+              {originalPrice > currentPrice && (
+                <span className="text-[10px] sm:text-xs text-offer line-through decoration-primary/40 leading-none">
+                  {originalPrice}
                 </span>
               )}
-              <span className="text-sm sm:text-xl font-black text-foreground">
-                {currentPrice.toLocaleString("ar-EG")}
-                <span className="text-[8px] sm:text-xs font-bold mr-0.5 italic text-primary">
-                  ج.م
+
+              <span className="text-xl sm:text-2xl font-black text-foreground flex items-baseline gap-0.5 leading-none tracking-tighter">
+                {currentPrice}
+                <span className="text-[10px] sm:text-xs font-bold italic text-primary align-top">
+                  EGP{" "}
                 </span>
               </span>
             </div>
 
-            {/* Technical Color Indicator - Hidden on mobile to save space */}
-            <div className="hidden sm:flex -space-x-1 rtl:space-x-reverse">
-              {product.colors?.slice(0, 2).map((color, i) => (
+            <div className="hidden sm:flex -space-x-1 mb-1 rtl:space-x-reverse">
+              {product.colors?.slice(0, 3).map((color, i) => (
                 <div
                   key={i}
                   className="w-3 h-3 border border-background ring-1 ring-border"
@@ -157,33 +108,33 @@ export default function ProductCardContent({
         </div>
       </Link>
 
-      {/* Action Area - Adaptive Button */}
-      <div className="border-t border-border">
-        <button
-          onClick={handleToggleCart}
-          disabled={
-            product.stockStatus === "out_of_stock" || isPendingCart || isInCart
+      {/* Action Button - Brutalist Style */}
+      <button
+        onClick={handleAddToCart}
+        disabled={isPending || product.stockStatus === "out_of_stock"}
+        className={`
+          absolute bottom-0 left-0 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-all z-20
+          ${
+            product.stockStatus === "out_of_stock"
+              ? "bg-muted text-muted-foreground cursor-not-allowed"
+              : "bg-foreground text-background hover:bg-primary hover:text-white"
           }
-          className={`w-full flex items-center justify-center gap-2 py-3 sm:py-4 text-[10px] sm:text-sm font-black transition-all uppercase tracking-widest
-            ${
-              product.stockStatus === "out_of_stock"
-                ? "bg-muted text-muted-foreground"
-                : isInCart
-                  ? "bg-foreground text-background"
-                  : "bg-secondary text-secondary-foreground hover:bg-primary hover:text-white"
-            }`}
-        >
-          {isPendingCart ? (
-            <Loader className="w-4 h-4 animate-spin" />
-          ) : (
-            <>
-              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-              {/* Text hidden on mobile, only icon + "سلة" shown or just short text */}
-              <span className="sm:inline">السلة</span>
-            </>
-          )}
-        </button>
-      </div>
+          border-t border-r border-border sm:border-none
+        `}
+      >
+        {isPending ? (
+          <Loader2 className="w-5 h-5 animate-spin" />
+        ) : product.stockStatus === "out_of_stock" ? (
+          <span className="text-[8px] font-black rotate-90 sm:rotate-0 uppercase">
+            Empty
+          </span>
+        ) : (
+          <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
+        )}
+      </button>
+
+      {/* Visual Accent for Hover */}
+      <div className="absolute inset-x-0 bottom-0 h-1 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
     </div>
   );
 }

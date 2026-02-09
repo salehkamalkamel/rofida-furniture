@@ -26,7 +26,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { createProduct } from "@/app/dashboard/products/new/_actions";
+import { createProduct } from "@/actions/_actions";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { cn } from "@/lib/utils"; // Assuming you have a cn utility, if not use template literals
 

@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/db/schema";
 import { Truck, Ruler, Clock, Edit3, Check, Info } from "lucide-react";
-import { addToCart } from "@/actions/cart-actions";
-import { toast } from "sonner";
+
 import { calculatePrice } from "@/lib/pricing";
-import { WishlistButton } from "../wishlist-btn";
 import { useRouter } from "next/navigation";
+import { WishlistToggleSkeleton } from "../wishlist/wishlist-toggle-skeleton";
+import WishlistToggle from "../wishlist/wishlist-toggle";
+import { CartToggleSkeleton } from "../cart/cart-toggle-skeleton";
+import CartToggle from "../cart/cart-toggle";
 
 interface ProductDetailContentProps {
   product: Product;
@@ -21,7 +23,6 @@ export default function ProductDetailContent({
   similarProducts,
 }: ProductDetailContentProps) {
   const [selectedImage, setSelectedImage] = useState(0);
-  const [isPending, startTransition] = useTransition();
   const [selectedColor, setSelectedColor] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showCustomization, setShowCustomization] = useState(false);
@@ -48,29 +49,6 @@ export default function ProductDetailContent({
     });
 
     router.push(`/instant-buy?${params.toString()}`);
-  };
-
-  const handleAddToCart = () => {
-    startTransition(async () => {
-      const result = await addToCart({
-        productId: product.id,
-        quantity: quantity,
-        isCustomized: showCustomization,
-        customizationText: customizationText,
-        selectedColor: product.colors?.[selectedColor]?.name,
-      });
-      if (result.success) {
-        toast.success("تمت إضافة المنتج للسلة بنجاح", {
-          description: product.name,
-          action: {
-            label: "عرض السلة",
-            onClick: () => (window.location.href = "/cart"),
-          },
-        });
-      } else {
-        toast.error(result.error || "حدث خطأ ما");
-      }
-    });
   };
 
   if (!product) return null;
@@ -153,7 +131,10 @@ export default function ProductDetailContent({
                   {product.name}
                 </h1>
               </div>
-              <WishlistButton productId={product.id} />
+              {/* <WishlistButton productId={product.id} /> */}
+              <Suspense fallback={<WishlistToggleSkeleton />}>
+                <WishlistToggle productId={product.id} />
+              </Suspense>
             </div>
 
             <p className="mt-6 text-base md:text-lg text-muted-foreground leading-relaxed font-medium">
@@ -162,14 +143,14 @@ export default function ProductDetailContent({
 
             <div className="mt-8 flex flex-wrap items-baseline gap-2 md:gap-4">
               <span className="text-4xl md:text-5xl font-black tracking-tighter">
-                {priceDetails.unitPrice.toLocaleString("ar-EG")}
+                {priceDetails.unitPrice}
               </span>
               <span className="text-lg md:text-xl font-bold uppercase tracking-widest text-muted-foreground">
                 جنيه مصري
               </span>
               {product.isOnOffer && (
                 <span className="text-lg md:text-xl line-through opacity-30 font-mono">
-                  {Number(product.price).toLocaleString("ar-EG")}
+                  {Number(product.price)}
                 </span>
               )}
             </div>
@@ -286,13 +267,17 @@ export default function ProductDetailContent({
                   </button>
                 </div>
 
-                <button
-                  onClick={handleAddToCart}
-                  disabled={!isAvailable || isPending}
-                  className="w-full bg-white text-foreground border-2 border-foreground h-14 md:h-16 font-black uppercase tracking-[0.2em] hover:bg-muted transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
-                >
-                  {isPending ? "..." : "إضافة للسلة"}
-                </button>
+                <Suspense fallback={<CartToggleSkeleton />}>
+                  <CartToggle
+                    productId={product.id}
+                    quantity={quantity}
+                    isCustomized={Boolean(
+                      showCustomization && customizationText,
+                    )}
+                    customizationText={customizationText}
+                    selectedColor={selectedColor.toString()}
+                  />
+                </Suspense>
               </div>
 
               {/* NEW: Instant Buy Button */}
