@@ -8,10 +8,10 @@ export default function ClientLayout({
   children: ReactNode;
 }>) {
   return (
-    <>
+    <div className="flex flex-col  overflow-hidden">
       <Header />
       {children}
       <Footer />
-    </>
+    </div>
   );
 }

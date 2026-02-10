@@ -42,7 +42,7 @@ export default async function ProductsPage({
   const products = await getFilteredProductsClient({ query, category });
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col ">
       <ProductsContent products={products} />
     </div>
   );
