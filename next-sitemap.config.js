@@ -4,7 +4,15 @@ module.exports = {
   generateRobotsTxt: true,
   sitemapSize: 5000,
 
-  exclude: ["/account/*", "/api/*", "/_not-found", "/dashboard/*"],
+  exclude: [
+    "/auth/*",
+    "/forbidden",
+
+    "/account/*",
+    "/api/*",
+    "/_not-found",
+    "/dashboard/*",
+  ],
 
   robotsTxtOptions: {
     policies: [
