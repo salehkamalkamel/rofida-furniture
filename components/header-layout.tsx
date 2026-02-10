@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import Logo from "./logo";
-import { Heart, ShoppingBag, User, Menu, X } from "lucide-react";
+import { Heart, ShoppingBag, User, Menu, X, ArrowUpLeft } from "lucide-react";
 import { navList } from "@/lib/data/header-data";
 
 export default function HeaderLayout({
@@ -123,6 +123,18 @@ export default function HeaderLayout({
               </Link>
             ))}
           </nav>
+          {/* Mobile Menu Footer Signature */}
+          <div className="mt-auto pt-8 border-t border-border text-center text-[10px] tracking-widest opacity-30">
+            <span className="block mb-1">تم تصميم وتطوير الموقع بواسطة</span>
+            <Link
+              href="https://saleh-kamal.blog/"
+              target="_blank"
+              className="font-black opacity-60 hover:opacity-100 hover:text-primary transition-all inline-flex items-center gap-1"
+            >
+              Saleh Kamal
+              <ArrowUpLeft className="w-3 h-3" />
+            </Link>
+          </div>
         </div>
       )}
     </header>

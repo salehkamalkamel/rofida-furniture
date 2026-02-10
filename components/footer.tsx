@@ -133,22 +133,38 @@ export default function Footer() {
         </div>
 
         {/* Final Bottom Bar */}
-        <div className="border-t border-background/10 p-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
-            © 2026 ROFIDA_FURNITURE INDUSTRIAL DESIGN. ALL RIGHTS RESERVED.
-          </p>
-          <div className="flex gap-8">
+        <div className="border-t border-background/10 px-8 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+              © 2026 ROFIDA_FURNITURE INDUSTRIAL DESIGN. ALL RIGHTS RESERVED.
+            </p>
+
+            <div className="flex gap-8">
+              <Link
+                href="#"
+                className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="#"
+                className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
+              >
+                Terms of Service
+              </Link>
+            </div>
+          </div>
+
+          {/* Developer Signature */}
+          <div className="mt-3 text-[10px] tracking-widest opacity-30 text-center md:text-right">
+            <span className="mr-1">تم تصميم وتطوير الموقع بواسطة</span>
             <Link
-              href="#"
-              className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
+              href="https://saleh-kamal.blog/"
+              target="_blank"
+              className="font-black opacity-60 hover:opacity-100 hover:text-primary transition-all inline-flex items-center gap-1"
             >
-              Privacy Policy
-            </Link>
-            <Link
-              href="#"
-              className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
-            >
-              Terms of Service
+              Saleh Kamal
+              <ArrowUpLeft className="w-3 h-3" />
             </Link>
           </div>
         </div>
