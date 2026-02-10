@@ -99,7 +99,7 @@ export async function createOrder(addressId: number, shippingRuleId: number) {
         totalAmount: totals.total.toString(),
         shippingAmount: totals.shipping.toString(),
         shippingRuleId: shippingRule.id,
-        shippingAddress: address, // FULL SNAPSHOT
+        shippingAddress: address,
         status: "pending",
         paymentStatus: "pending",
         currency: "EGP",

@@ -20,6 +20,7 @@ import EmailTemplate from "@/components/email-template";
 import { renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
 import { BillTemplate } from "@/components/pdf/bill-template";
+import OrderStatusEmail from "@/components/OrderStatusEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -224,6 +225,19 @@ export async function cancelOrder(orderId: number) {
         .set({ status: "cancelled", updatedAt: new Date() })
         .where(eq(orders.id, orderId));
 
+      const { data, error } = await resend.emails.send({
+        from: "contact@contact.rofida-furniture.com",
+        to: session.user.email,
+        subject: `تحديث بخصوص طلبك رقم #${orderId}`,
+        react: OrderStatusEmail({
+          username: session.user.name,
+          orderId: orderId,
+          status: "cancelled",
+        }),
+      });
+      if (error) {
+        console.error(error);
+      }
       return { success: true };
     });
 
@@ -249,27 +263,44 @@ export async function updateOrderStatus(
   try {
     const session = await auth.api.getSession({ headers: await headers() });
 
-    // 1. Role-based Security: Only Admins allowed
     if (!session?.user || session.user.role !== "admin") {
-      throw new Error("Unauthorized: Admin access required");
+      throw new Error("Unauthorized");
     }
 
-    await db
+    // 1. Perform the update
+    const updatedOrder = await db
       .update(orders)
       .set({
         status: newStatus,
         ...(newPaymentStatus && { paymentStatus: newPaymentStatus }),
         updatedAt: new Date(),
       })
-      .where(eq(orders.id, orderId));
+      .where(eq(orders.id, orderId))
+      .returning();
 
-    revalidatePath("/admin/orders"); // Assuming your admin route
-    revalidatePath(`/orders/${orderId}`);
+    if (updatedOrder.length > 0) {
+      const order = updatedOrder[0];
 
+      const { data, error } = await resend.emails.send({
+        from: "contact@contact.rofida-furniture.com",
+        to: session.user.email,
+        subject: `تحديث بخصوص طلبك رقم #${orderId}`,
+        react: OrderStatusEmail({
+          username: session.user.name,
+          orderId: orderId,
+          status: newStatus,
+        }),
+      });
+      if (error) {
+        console.error(error);
+      }
+    }
+
+    revalidatePath("/admin/orders");
     return { success: true };
   } catch (error: any) {
     console.error("Update Order Error:", error);
-    return { success: false, error: error.message || "Failed to update order" };
+    return { success: false, error: error.message };
   }
 }
 
