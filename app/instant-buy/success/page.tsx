@@ -10,6 +10,8 @@ import {
   UserPlus,
   ArrowLeft,
 } from "lucide-react";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 type Props = {
   searchParams: Promise<{ orderId?: string }>;
@@ -17,6 +19,7 @@ type Props = {
 
 export default async function InstantOrderSuccessPage({ searchParams }: Props) {
   const { orderId } = await searchParams;
+  const session = await auth.api.getSession({ headers: await headers() });
 
   if (!orderId) notFound();
 
@@ -90,41 +93,43 @@ export default async function InstantOrderSuccessPage({ searchParams }: Props) {
             </div>
 
             {/* NEW: Sign Up CTA Section */}
-            <div className="relative overflow-hidden group">
-              <div className="absolute inset-0 bg-primary/5 -skew-x-2 transform origin-bottom-left" />
-              <div className="relative border-2 border-dashed border-primary/30 p-6 sm:p-8 transition-all hover:border-primary">
-                <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                  <div className="shrink-0 bg-background border-2 border-foreground p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                    <UserPlus className="w-6 h-6 text-foreground" />
+            {session?.user.isAnonymous && (
+              <div className="relative overflow-hidden group">
+                <div className="absolute inset-0 bg-primary/5 -skew-x-2 transform origin-bottom-left" />
+                <div className="relative border-2 border-dashed border-primary/30 p-6 sm:p-8 transition-all hover:border-primary">
+                  <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+                    <div className="shrink-0 bg-background border-2 border-foreground p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                      <UserPlus className="w-6 h-6 text-foreground" />
+                    </div>
+                    <div className="space-y-2 flex-1">
+                      <h3 className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                        لا تفقد تتبع طلبك
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        قم بإنشاء حساب الآن لربط هذا الطلب بحسابك، متابعة
+                        الشحنة، وتسريع عملية الشراء القادمة.
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-2 flex-1">
-                    <h3 className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
-                      لا تفقد تتبع طلبك
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      قم بإنشاء حساب الآن لربط هذا الطلب بحسابك، متابعة الشحنة،
-                      وتسريع عملية الشراء القادمة.
-                    </p>
-                  </div>
-                </div>
 
-                <div className="mt-6 pt-6 border-t border-dashed border-foreground/10 flex flex-col sm:flex-row gap-4">
-                  <Link
-                    href="/auth/signup"
-                    className="flex-1 inline-flex items-center justify-center gap-2 bg-foreground text-background h-12 px-6 font-black uppercase tracking-widest hover:bg-primary transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
-                  >
-                    <span>انشاء حساب</span>
-                    <ArrowLeft className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    href="/"
-                    className="sm:w-auto inline-flex items-center justify-center gap-2 bg-transparent border-2 border-foreground/10 text-foreground/60 h-12 px-6 font-bold uppercase tracking-widest hover:border-foreground hover:text-foreground transition-colors"
-                  >
-                    تخطي
-                  </Link>
+                  <div className="mt-6 pt-6 border-t border-dashed border-foreground/10 flex flex-col sm:flex-row gap-4">
+                    <Link
+                      href="/auth/signup"
+                      className="flex-1 inline-flex items-center justify-center gap-2 bg-foreground text-background h-12 px-6 font-black uppercase tracking-widest hover:bg-primary transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
+                    >
+                      <span>انشاء حساب</span>
+                      <ArrowLeft className="w-4 h-4" />
+                    </Link>
+                    <Link
+                      href="/"
+                      className="sm:w-auto inline-flex items-center justify-center gap-2 bg-transparent border-2 border-foreground/10 text-foreground/60 h-12 px-6 font-bold uppercase tracking-widest hover:border-foreground hover:text-foreground transition-colors"
+                    >
+                      تخطي
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Secondary Actions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 opacity-60 hover:opacity-100 transition-opacity">
@@ -171,10 +176,7 @@ export default async function InstantOrderSuccessPage({ searchParams }: Props) {
                           COLOR: {item.selectedColor || "DEFAULT"}
                         </p>
                         <p className="font-mono text-xs mt-2">
-                          {(Number(item.price) * item.quantity).toLocaleString(
-                            "ar-EG",
-                          )}{" "}
-                          {order.currency}
+                          {Number(item.price) * item.quantity} {order.currency}
                         </p>
                       </div>
                     </div>

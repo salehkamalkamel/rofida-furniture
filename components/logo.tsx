@@ -32,7 +32,7 @@ export default function Logo() {
         <span className="text-xl font-black leading-none tracking-tighter text-foreground uppercase italic">
           روفيدا
         </span>
-        <div className="flex items-center gap-1.5 mt-0.5">
+        <div className=" items-center gap-1.5 mt-0.5 hidden sm:flex">
           <div className="w-1.5 h-1.5 bg-primary" />
           <span className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground leading-none">
             Furniture_Unit

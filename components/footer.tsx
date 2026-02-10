@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="bg-foreground text-background border-t border-foreground">
       {/* Top Bar: Newsletter / High Impact Statement */}
       <div className="border-b border-background/10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center">
           <div className="flex-1 p-8 md:p-12 border-b md:border-b-0 md:border-l border-background/10">
             <h3 className="text-3xl font-black uppercase tracking-tighter mb-4">
               Join the Architecture
@@ -15,7 +15,7 @@ export default function Footer() {
             <p className="text-background/50 text-sm max-w-sm mb-6 uppercase tracking-widest">
               Get updates on new collections and technical design specs.
             </p>
-            <form className="flex group">
+            <form className="flex group ">
               <input
                 type="email"
                 placeholder="EMAIL ADDRESS"
