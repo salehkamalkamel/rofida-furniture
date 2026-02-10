@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: "https://rofida-furniture.vercel.app",
+  siteUrl: "https://www.rofida-furniture.com",
   generateRobotsTxt: true,
   sitemapSize: 5000,
 
