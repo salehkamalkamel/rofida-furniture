@@ -15,6 +15,8 @@ import { revalidatePath } from "next/cache";
 import db from "..";
 import { findShippingRule } from "./order-actions";
 import { calculateOrderTotals } from "@/lib/pricing/calculateOrder";
+import { Resend } from "resend";
+import EmailTemplate from "@/components/email-template";
 
 /* =========================
    ERRORS
@@ -27,6 +29,8 @@ class NotFoundError extends Error {}
 /* =========================
    CREATE ORDER
 ========================= */
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function createOrder(addressId: number, shippingRuleId: number) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -124,6 +128,21 @@ export async function createOrder(addressId: number, shippingRuleId: number) {
     ========================= */
     await tx.delete(cartItems).where(eq(cartItems.cartId, cart.id));
 
+    const { data, error } = await resend.emails.send({
+      from: "contact@contact.rofida-furniture.com",
+      to: session.user.email,
+      subject: `تأكيد طلبك رقم #${order.id}`,
+      react: EmailTemplate({
+        username: session.user.name,
+        orderStatus: order.status,
+        orderId: order.id,
+        ctaUrl: `https://www.rofida-furniture.com/account/orders/${order.id}`,
+      }),
+    });
+    if (error) {
+      console.error(error);
+    }
+    console.log("create order data:", data);
     /* =========================
        8️⃣ Revalidate UI
     ========================= */

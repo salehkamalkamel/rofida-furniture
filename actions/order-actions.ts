@@ -18,10 +18,11 @@ import { getAddressById } from "./address-actions";
 import { revalidatePath } from "next/cache";
 import EmailTemplate from "@/components/email-template";
 import { renderToBuffer } from "@react-pdf/renderer";
-import React, { createElement } from "react";
+import React from "react";
 import { BillTemplate } from "@/components/pdf/bill-template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
 type CreateOrderResult = {
   success: boolean;
   orderId?: number;
@@ -71,19 +72,16 @@ export async function createOrder(
         );
       // 7️⃣ Clear user's cart
       await clearUserCart(tx, userCart.id);
-
-      const { data, error } = await resend.emails.send({
-        from: "روفيدا للاثاث <delivered@saleh-kamal.blog>",
-        to: orderDetails.email,
-        subject: `تأكيد طلبك رقم #${orderDetails.id}`,
-        react: EmailTemplate({ username: session.user.name }),
-      });
-      if (error) {
-        console.error(error);
-      }
-
-      console.log(data);
-
+      // const { data, error } = await resend.emails.send({
+      //   from: "روفيدا للاثاث <contact.rofida-furniture.com>",
+      //   to: orderDetails.email,
+      //   subject: `تأكيد طلبك رقم #${orderDetails.id}`,
+      //   react: EmailTemplate({ username: session.user.name }),
+      // });
+      // if (error) {
+      //   console.error(error);
+      // }
+      // console.log("create order data:", data);
       // 8️⃣ Revalidate paths
       revalidatePath("/orders");
       revalidatePath("/cart");

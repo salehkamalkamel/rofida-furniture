@@ -11,75 +11,114 @@ import {
   Hr,
 } from "@react-email/components";
 
-interface RovidaEmailProps {
+/* =========================
+   PROPS
+========================= */
+
+interface RovidaOrderEmailProps {
   username?: string;
-  mainText?: string;
-  ctaText?: string;
+  orderId: number | string;
+  orderStatus?: string;
+  paymentMethod?: string;
   ctaUrl?: string;
 }
 
+/* =========================
+   COMPONENT
+========================= */
+
 export const EmailTemplate = ({
-  username = "العميل",
-  mainText = "لقد تم استلام طلبك بنجاح في نظامنا. سيتم معالجة البيانات وتأكيد الشحنة قريباً.",
-  ctaText = "عرض تفاصيل الطلب",
-  ctaUrl = "https://rofida-furniture.vercel.app/orders",
-}: RovidaEmailProps) => (
-  <Html dir="rtl">
+  username = "عميلنا العزيز",
+  orderId,
+  orderStatus = "قيد المراجعة",
+  paymentMethod = "الدفع عند الاستلام",
+  ctaUrl = "https://www.rofida-furniture.com/account/orders",
+}: RovidaOrderEmailProps) => (
+  <Html dir="rtl" lang="ar">
     <Head />
-    <Preview>تحديث من روفيدا للاثاث - ROVIDA_SYS</Preview>
+    <Preview>{`تم استلام طلبك رقم #${orderId} بنجاح`}</Preview>
+
     <Body style={main}>
       <Container style={container}>
-        {/* Header/Logo Section */}
-        <Section style={headerSection}>
-          <Text style={logo}>ROVIDA_SYS.</Text>
+        {/* ================= HEADER ================= */}
+        <Section style={header}>
+          <Text style={brand}>روفيدا للأثاث</Text>
+          <Text style={brandSub}>تصميمات عملية • جودة تدوم</Text>
         </Section>
 
-        {/* Status Badge */}
-        <Section style={statusBadgeContainer}>
-          <Text style={statusBadge}>[ SYSTEM_NOTIFICATION_2026 ]</Text>
-        </Section>
+        {/* ================= CONTENT ================= */}
+        <Section style={content}>
+          <Heading style={h1}>مرحباً {username} 👋</Heading>
 
-        {/* Main Content Area */}
-        <Section style={contentBox}>
-          <Heading style={h1}>مرحباً، {username}</Heading>
+          <Text style={paragraph}>
+            نشكرك لاختيارك <strong>روفيدا للأثاث</strong> 🤍
+            <br />
+            تم استلام طلبك بنجاح، ويجري حالياً مراجعته وتجهيزه للتنفيذ.
+          </Text>
 
-          <Text style={textBody}>{mainText}</Text>
+          {/* ===== ORDER SUMMARY ===== */}
+          <Section style={summaryBox}>
+            <Text style={summaryRow}>
+              <strong>رقم الطلب:</strong> #{orderId}
+            </Text>
+            <Text style={summaryRow}>
+              <strong>حالة الطلب:</strong> {orderStatus}
+            </Text>
+            <Text style={summaryRow}>
+              <strong>طريقة الدفع:</strong> {paymentMethod}
+            </Text>
+          </Section>
 
-          {/* Brutalist CTA Button */}
-          <Section style={btnContainer}>
-            <Link href={ctaUrl} style={button}>
-              {ctaText}
+          <Text style={paragraph}>
+            سنقوم بإشعارك فور بدء عملية الشحن، مع إرسال جميع تفاصيل التوصيل.
+          </Text>
+
+          {/* ===== CTA ===== */}
+          <Section style={ctaContainer}>
+            <Link href={ctaUrl} style={ctaButton}>
+              عرض تفاصيل الطلب ومتابعته
             </Link>
           </Section>
         </Section>
 
-        {/* Secondary Info Area */}
-        <Section style={terminalSection}>
-          <Text style={terminalHeader}>// سجل العمليات</Text>
-          <Text style={terminalText}>
-            ID: {Math.random().toString(36).toUpperCase().substring(2, 10)}
+        {/* ================= SUPPORT ================= */}
+        <Section style={supportSection}>
+          <Text style={supportText}>
+            هل لديك أي استفسار؟
             <br />
-            LOC: CAI_EGY_01
-            <br />
-            STATUS: AUTHENTICATED
+            فريق روفيدا جاهز لمساعدتك دائماً.
           </Text>
+
+          <Link href="mailto:support@rofida-furniture.com" style={supportLink}>
+            support@rofida-furniture.com
+          </Link>
         </Section>
 
-        {/* Footer */}
+        {/* ================= FOOTER ================= */}
         <Section style={footer}>
           <Hr style={hr} />
           <Text style={footerText}>
-            روفيدا للاثاث — تصميم صناعي للأجيال القادمة.
+            © {new Date().getFullYear()} روفيدا للأثاث — جميع الحقوق محفوظة
           </Text>
-          <Link href="https://rofida-furniture.vercel.app" style={footerLink}>
-            الخصوصية
-          </Link>
-          {" | "}
-          <Link href="https://rofida-furniture.vercel.app" style={footerLink}>
-            الشروط
-          </Link>
-          <Text style={copyright}>
-            © 2026 ROVIDA_FURNITURE. ALL_SYSTEMS_GO.
+
+          <Text style={footerLinks}>
+            <Link href="https://www.rofida-furniture.com" style={footerLink}>
+              الموقع الإلكتروني
+            </Link>
+            {" • "}
+            <Link
+              href="https://www.rofida-furniture.com/privacy"
+              style={footerLink}
+            >
+              سياسة الخصوصية
+            </Link>
+            {" • "}
+            <Link
+              href="https://www.rofida-furniture.com/terms"
+              style={footerLink}
+            >
+              الشروط والأحكام
+            </Link>
           </Text>
         </Section>
       </Container>
@@ -89,127 +128,135 @@ export const EmailTemplate = ({
 
 export default EmailTemplate;
 
-/* --- STYLES --- */
+/* =========================
+   STYLES
+========================= */
 
 const main = {
-  backgroundColor: "#f4f4f4", // Light gray background
-  fontFamily: "Arial, sans-serif",
+  backgroundColor: "#f4f4f4",
+  fontFamily: "'Cairo', 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif",
   textAlign: "right" as const,
 };
 
 const container = {
+  maxWidth: "600px",
   margin: "40px auto",
-  width: "600px",
   backgroundColor: "#ffffff",
-  border: "2px solid #000000",
+  borderRadius: "10px",
+  overflow: "hidden",
+  border: "1px solid #e5e5e5",
 };
 
-const headerSection = {
+/* Header */
+const header = {
   padding: "30px",
   backgroundColor: "#000000",
 };
 
-const logo = {
+const brand = {
   color: "#ffffff",
   fontSize: "24px",
-  fontWeight: "900",
-  letterSpacing: "-1px",
+  fontWeight: "800",
   margin: "0",
 };
 
-const statusBadgeContainer = {
-  padding: "10px 30px",
-  backgroundColor: "#eeeeee",
-  borderBottom: "1px solid #000000",
+const brandSub = {
+  color: "#facc15",
+  fontSize: "13px",
+  marginTop: "6px",
 };
 
-const statusBadge = {
-  fontSize: "10px",
-  fontWeight: "bold",
-  color: "#666666",
-  margin: "0",
-  fontFamily: "monospace",
-};
-
-const contentBox = {
-  padding: "40px 30px",
+/* Content */
+const content = {
+  padding: "32px 28px",
 };
 
 const h1 = {
-  fontSize: "32px",
-  fontWeight: "900",
-  color: "#000000",
-  lineHeight: "1.2",
+  fontSize: "22px",
+  fontWeight: "700",
+  margin: "0 0 16px 0",
+};
+
+const paragraph = {
+  fontSize: "15px",
+  lineHeight: "1.7",
+  color: "#333333",
   margin: "0 0 20px 0",
 };
 
-const textBody = {
-  fontSize: "16px",
-  lineHeight: "1.6",
-  color: "#333333",
-  borderRight: "4px solid #FACC15", // Primary yellow accent
-  paddingRight: "15px",
+/* Summary */
+const summaryBox = {
+  backgroundColor: "#fafafa",
+  border: "1px solid #e5e5e5",
+  borderRadius: "8px",
+  padding: "16px",
+  marginBottom: "20px",
 };
 
-const btnContainer = {
-  marginTop: "30px",
-};
-
-const button = {
-  backgroundColor: "#000000",
-  color: "#ffffff",
-  padding: "18px 30px",
-  textDecoration: "none",
+const summaryRow = {
   fontSize: "14px",
-  fontWeight: "bold",
+  margin: "0 0 6px 0",
+};
+
+/* CTA */
+const ctaContainer = {
+  textAlign: "center" as const,
+  marginTop: "28px",
+};
+
+const ctaButton = {
+  backgroundColor: "#0070bb",
+  color: "#ffffff",
+  padding: "14px 28px",
+  fontSize: "14px",
+  fontWeight: "700",
+  textDecoration: "none",
+  borderRadius: "6px",
   display: "inline-block",
-  boxShadow: "6px 6px 0px 0px #FACC15", // The signature offset shadow
 };
 
-const terminalSection = {
-  padding: "20px 30px",
+/* Support */
+const supportSection = {
+  padding: "24px 28px",
   backgroundColor: "#f9f9f9",
-  borderTop: "2px solid #000000",
+  textAlign: "center" as const,
 };
 
-const terminalHeader = {
-  fontSize: "12px",
-  fontWeight: "bold",
+const supportText = {
+  fontSize: "13px",
+  color: "#333333",
+  marginBottom: "6px",
+};
+
+const supportLink = {
+  fontSize: "13px",
   color: "#000000",
-  margin: "0 0 5px 0",
+  fontWeight: "700",
+  textDecoration: "underline",
 };
 
-const terminalText = {
-  fontSize: "11px",
-  fontFamily: "monospace",
-  color: "#888888",
-  margin: "0",
-};
-
+/* Footer */
 const footer = {
-  padding: "0 30px 40px 30px",
+  padding: "24px 28px",
 };
 
 const hr = {
   borderColor: "#e5e5e5",
-  margin: "20px 0",
+  marginBottom: "16px",
 };
 
 const footerText = {
-  fontSize: "12px",
-  color: "#000000",
-  fontWeight: "bold",
+  fontSize: "11px",
+  color: "#666666",
+  marginBottom: "10px",
+};
+
+const footerLinks = {
+  fontSize: "11px",
+  color: "#666666",
 };
 
 const footerLink = {
-  fontSize: "10px",
   color: "#666666",
   textDecoration: "underline",
-};
-
-const copyright = {
-  fontSize: "10px",
-  color: "#aaaaaa",
-  marginTop: "20px",
-  fontFamily: "monospace",
 };
