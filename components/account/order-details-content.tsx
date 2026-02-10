@@ -1,11 +1,10 @@
 // components/order/order-details-content.tsx
 import Image from "next/image";
 import { format } from "date-fns";
-import { X, RefreshCcw, Download } from "lucide-react";
+import { X } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getOrderById } from "@/actions/order-actions";
 import CancelOrderButton from "@/components/order/cancel-order-btn";
-import { DownloadPDFButton } from "../pdf-bill-btn";
 
 export default async function OrderDetailsContent({
   orderId,
@@ -92,7 +91,7 @@ export default async function OrderDetailsContent({
                       {item.productName}
                     </h3>
                     <p className="font-black text-primary">
-                      {Number(item.price).toLocaleString()} ج.م
+                      {Number(item.price)} ج.م
                     </p>
                   </div>
                   <p className="text-xs text-muted-foreground italic">
@@ -145,7 +144,7 @@ export default async function OrderDetailsContent({
           <div className="flex justify-between text-sm">
             <span>المجموع الفرعي</span>
             <span className={isCancelled ? "line-through opacity-50" : ""}>
-              {Number(order.totalAmount).toLocaleString()} ج.م
+              {Number(order.totalAmount)} ج.م
             </span>
           </div>
           <div className="pt-3 border-t border-border flex justify-between items-end">
@@ -153,7 +152,7 @@ export default async function OrderDetailsContent({
             <span
               className={`text-2xl font-black ${isCancelled ? "text-muted-foreground line-through" : "text-primary"}`}
             >
-              {Number(order.totalAmount).toLocaleString()}
+              {Number(order.totalAmount)}
             </span>
           </div>
 

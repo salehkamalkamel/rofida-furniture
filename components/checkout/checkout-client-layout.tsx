@@ -129,7 +129,7 @@ export default function CheckoutClientLayout({
           {/* 2. Main Content Area (Form/Selection) */}
           <div className="lg:col-span-8 space-y-8">
             <div className="border-2 border-foreground p-1 md:p-2 bg-foreground/5">
-              <div className="bg-background border border-foreground/10 p-6 md:p-10">
+              <div className="bg-background border border-foreground/10 ">
                 {currentStep === "cart" && (
                   <CheckoutCartSummary cartData={cartData} />
                 )}

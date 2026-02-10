@@ -63,7 +63,7 @@ export const categories: Category[] = [
     nameEn: "wardrobe",
     icon: "wardrobe",
     image:
-      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770050057/IMG-20260202-WA0014_agwmqc.jpg",
+      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770713094/mid-century-modern-wooden-wardrobe_vh5ava.jpg",
     productCount: 67,
   },
   {
@@ -72,7 +72,7 @@ export const categories: Category[] = [
     nameEn: "shelves",
     icon: "shelves",
     image:
-      "https://plus.unsplash.com/premium_photo-1681810782651-e5baca274a6a?q=80&w=403&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770713460/vertical-shot-picture-frame-house-plants-transparent-glass-container-white-wall_mgqkbb.jpg",
     productCount: 45,
   },
   {
@@ -81,7 +81,7 @@ export const categories: Category[] = [
     nameEn: "accessories",
     icon: "accessories",
     image:
-      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770406114/IMG-20260202-WA0074_mvq8qo.jpg",
+      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770724575/2149427960_ix6qut.jpg",
     productCount: 38,
   },
   {
@@ -90,16 +90,16 @@ export const categories: Category[] = [
     nameEn: "coffee corner",
     icon: "coffee",
     image:
-      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770478338/31rsmijy9IL._AC_UF894_1000_QL80__d5f4sp.jpg",
+      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770713338/2150354609_qjoaal.jpg",
     productCount: 52,
   },
   {
     id: "desk",
-    name: "مكاتب",
+    name: "مكتب",
     nameEn: "desk",
     icon: "desk",
     image:
-      "https://images.unsplash.com/photo-1476365518243-f738bf58443d?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://res.cloudinary.com/dz4gikdws/image/upload/v1770713191/2148267498_ssmhr7.jpg",
     productCount: 78,
   },
 ];
@@ -445,6 +445,6 @@ export const heroSlides = [
     image:
       "https://res.cloudinary.com/dz4gikdws/image/upload/v1770623251/98164_c7xd8u.jpg",
     cta: "استعرض المجموعة",
-    link: "/products?category=living-room",
+    link: "/products",
   },
 ];

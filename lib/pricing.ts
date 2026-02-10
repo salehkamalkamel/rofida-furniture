@@ -19,9 +19,8 @@ export type CartSummary = {
 };
 
 export function calculateCartSummary(itemsTotal: number): CartSummary {
-  const threshold = 2000;
-  // Apply our integer rounding rule to shipping too
-  const deliveryFee = itemsTotal >= threshold ? 0 : 150;
+  const threshold = 10000;
+  const deliveryFee = itemsTotal >= threshold ? 0 : 200;
 
   return {
     subtotal: Math.round(itemsTotal),

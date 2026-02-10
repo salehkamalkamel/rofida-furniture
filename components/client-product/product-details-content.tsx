@@ -215,32 +215,82 @@ export default function ProductDetailContent({
               </div>
 
               <div
-                className={`border-2 transition-all ${showCustomization ? "border-primary" : "border-foreground/10"}`}
+                className={`relative overflow-hidden border-2 transition-all ${
+                  showCustomization
+                    ? "border-primary bg-primary/5"
+                    : "border-foreground/10 bg-muted/5"
+                }`}
+                dir="rtl"
               >
+                {/* Badge */}
+                <div className="absolute bottom-3 right-3 text-[9px] font-black uppercase tracking-widest bg-primary text-white px-2 py-1">
+                  خدمة مميزة
+                </div>
+
                 <button
                   onClick={() => setShowCustomization(!showCustomization)}
-                  className="w-full flex items-center justify-between p-4 bg-muted/10"
+                  className="w-full p-5 flex flex-row-reverse items-start gap-4 text-right"
                 >
-                  <div className="flex items-center gap-3">
-                    <Edit3 className="w-5 h-5 text-primary" />
-                    <span className="text-xs font-black uppercase tracking-widest">
-                      تخصيص المواصفات (+10%)
-                    </span>
+                  {/* Icon */}
+                  <div className="mt-1">
+                    <Edit3 className="w-6 h-6 text-primary" />
                   </div>
+
+                  {/* Content */}
+                  <div className="flex-1 space-y-2">
+                    <h4 className="text-sm font-black uppercase tracking-widest">
+                      تخصيص المنتج حسب طلبك
+                    </h4>
+
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      اطلب نفس المنتج مع تعديلات خاصة مثل المقاسات، الأدراج،
+                      الأرفف أو أي تفاصيل إضافية تناسب احتياجك.
+                    </p>
+
+                    <div className="flex flex-wrap gap-4 text-[10px] font-bold uppercase justify-end">
+                      <span className="flex items-center gap-1">
+                        زيادة 10% فقط
+                        <Check className="w-3 h-3 text-primary" />
+                      </span>
+                      <span className="flex items-center gap-1">
+                        رد خلال 24 ساعة
+                        <Clock className="w-3 h-3 text-primary" />
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Toggle */}
                   <div
-                    className={`w-5 h-5 border flex items-center justify-center ${showCustomization ? "bg-primary border-primary text-white" : "border-foreground/30"}`}
+                    className={`w-6 h-6 shrink-0 border flex items-center justify-center ${
+                      showCustomization
+                        ? "bg-primary border-primary text-white"
+                        : "border-foreground/30"
+                    }`}
                   >
-                    {showCustomization && <Check className="w-3 h-3" />}
+                    {showCustomization && <Check className="w-4 h-4" />}
                   </div>
                 </button>
+
                 {showCustomization && (
-                  <div className="p-4 bg-white space-y-4 border-t border-foreground/10">
+                  <div className="border-t border-foreground/10 p-5 space-y-3 bg-white text-right">
+                    <p className="text-[10px] uppercase tracking-widest font-black opacity-60">
+                      اكتب تفاصيل التعديل
+                    </p>
+
                     <textarea
                       value={customizationText}
                       onChange={(e) => setCustomizationText(e.target.value)}
-                      placeholder="أدخل المتطلبات الفنية..."
-                      className="w-full min-h-24 p-4 border border-foreground/10 bg-muted/5 focus:border-primary outline-none text-xs font-mono uppercase"
+                      placeholder="مثال: تقليل العرض 10 سم، إضافة درجين في الأسفل، تغيير لون السطح..."
+                      className="w-full min-h-28 p-4 border border-foreground/10 bg-muted/5 focus:border-primary outline-none text-xs leading-relaxed text-right"
                     />
+
+                    <div className="flex items-start gap-2 text-[10px] text-muted-foreground justify-end">
+                      <span>
+                        بعد إتمام الطلب، سيتواصل فريقنا معك لتأكيد التعديلات قبل
+                        التنفيذ.
+                      </span>
+                      <Info className="w-4 h-4 mt-0.5" />
+                    </div>
                   </div>
                 )}
               </div>
@@ -280,7 +330,6 @@ export default function ProductDetailContent({
                 </Suspense>
               </div>
 
-              {/* NEW: Instant Buy Button */}
               <button
                 onClick={handleInstantBuy}
                 disabled={!isAvailable}
@@ -289,6 +338,56 @@ export default function ProductDetailContent({
                 <span className="animate-pulse">⚡</span>
                 شراء الان{" "}
               </button>
+
+              <div
+                className="border-2 border-foreground bg-white p-5 space-y-4"
+                dir="rtl"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                    ملخص الطلب
+                  </span>
+                  {showCustomization && (
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                      يشمل تخصيص
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="opacity-60">سعر الوحدة</span>
+                    <span className="font-mono font-bold">
+                      {priceDetails.unitPrice} جنيه
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="opacity-60">الكمية</span>
+                    <span className="font-mono font-bold">× {quantity}</span>
+                  </div>
+
+                  {showCustomization && (
+                    <div className="flex justify-between text-primary">
+                      <span>خدمة التخصيص (+10%)</span>
+                      <span className="font-mono font-bold">
+                        +{priceDetails.customizationFee} جنيه
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="h-px bg-foreground/20" />
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-black uppercase tracking-widest">
+                    الإجمالي
+                  </span>
+                  <span className="text-2xl font-black tracking-tight font-mono transition-all duration-300 animate-in fade-in zoom-in">
+                    {priceDetails.totalPrice} جنيه
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -128,14 +128,11 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
                         <p className="font-black text-sm truncate uppercase tracking-tighter leading-tight">
                           {item.productName}
                         </p>
-                        <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-widest">
+                        {/* <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-widest">
                           COLOR: {item.selectedColor || "DEFAULT"}
-                        </p>
+                        </p> */}
                         <p className="font-mono text-xs mt-2">
-                          {(Number(item.price) * item.quantity).toLocaleString(
-                            "ar-EG",
-                          )}{" "}
-                          {order.currency}
+                          {Number(item.price) * item.quantity} {order.currency}
                         </p>
                       </div>
                     </div>
@@ -170,7 +167,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
                     <span className="opacity-70">طريقة الدفع:</span>
                     <span className="uppercase tracking-widest">
                       {order.paymentStatus === "pending"
-                        ? "Cash on Delivery"
+                        ? "الدفع عند الاستلام"
                         : order.paymentStatus}
                     </span>
                   </div>
@@ -183,20 +180,15 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
                     Subtotal
                   </span>
                   <span className="font-mono">
-                    {Math.round(Number(order.totalAmount)).toLocaleString(
-                      "ar-EG",
-                    )}{" "}
-                    {order.currency}
+                    {Math.round(Number(order.totalAmount))} {order.currency}
                   </span>
                 </div>
                 <div className="flex justify-between items-end pt-2">
                   <span className="text-sm font-black uppercase tracking-[0.2em]">
-                    Grand Total
+                    المجموع الإجمالي{" "}
                   </span>
                   <span className="text-3xl font-black tracking-tighter leading-none">
-                    {Math.round(Number(order.totalAmount)).toLocaleString(
-                      "ar-EG",
-                    )}
+                    {Math.round(Number(order.totalAmount))}
                     <span className="text-xs ml-1 font-bold opacity-40 tracking-normal">
                       {order.currency}
                     </span>

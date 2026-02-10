@@ -48,7 +48,7 @@ export default function HomePage() {
             <Suspense fallback={<ProductsSectionSkeleton />}>
               <ProductsSection
                 title="الأكثر مبيعاً"
-                label="new_arrival"
+                label="best_seller"
                 viewAllLink="/products?label=best_seller"
               />
             </Suspense>
@@ -62,7 +62,7 @@ export default function HomePage() {
             <Suspense fallback={<ProductsSectionSkeleton />}>
               <ProductsSection
                 title="عروض خاصة"
-                label="new_arrival"
+                label="on_sale"
                 limit={8}
                 viewAllLink="/products?label=on_sale"
               />

@@ -24,7 +24,7 @@ export default function CheckoutCartSummary({
           </h2>
         </div>
         <span className="font-mono text-xs bg-background text-foreground px-2 py-1">
-          {items.length} UNITS
+          {items.length} منتج
         </span>
       </div>
 
@@ -69,7 +69,7 @@ export default function CheckoutCartSummary({
 
                 {/* SPECIFICATIONS GRID */}
                 <div className="mt-3 flex flex-wrap gap-4 text-xs font-bold">
-                  {item.selectedColor && (
+                  {/* {item.selectedColor && (
                     <div className="flex flex-col">
                       <span className="text-[9px] text-muted-foreground uppercase">
                         Color
@@ -78,10 +78,10 @@ export default function CheckoutCartSummary({
                         {item.selectedColor}
                       </span>
                     </div>
-                  )}
+                  )} */}
                   <div className="flex flex-col">
                     <span className="text-[9px] text-muted-foreground uppercase">
-                      Qty
+                      الكمية
                     </span>
                     <span className="text-foreground font-mono">
                       x{item.quantity}
@@ -106,13 +106,11 @@ export default function CheckoutCartSummary({
                   <div className="space-y-1">
                     {!!item.priceAtAdd && (
                       <p className="text-[10px] text-muted-foreground line-through font-mono">
-                        {(
-                          Number(item.priceAtAdd) * item.quantity
-                        ).toLocaleString("ar-EG")}
+                        {Number(item.priceAtAdd) * item.quantity}
                       </p>
                     )}
                     <p className="font-black text-lg tracking-tighter leading-none">
-                      {itemPrice.toLocaleString("ar-EG")}
+                      {itemPrice}
                       <span className="text-[10px] mr-1 font-bold opacity-40">
                         EGP
                       </span>

@@ -91,14 +91,14 @@ export default function CartPageContent({
                         {item.product.name}
                       </h3>
                       <div className="flex gap-4 items-center">
-                        {item.selectedColor && (
+                        {/* {item.selectedColor && (
                           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground border border-foreground/10 px-2 py-0.5">
                             Color: {item.selectedColor}
                           </span>
-                        )}
+                        )} */}
                         {item.isCustomized && (
                           <span className="text-[10px] font-bold uppercase tracking-widest text-primary border border-primary/20 px-2 py-0.5">
-                            Custom Build
+                            تعديل علي المنتج
                           </span>
                         )}
                       </div>
@@ -154,8 +154,7 @@ export default function CartPageContent({
                         Subtotal
                       </p>
                       <p className="font-mono text-lg font-black tracking-tighter text-foreground">
-                        {itemSubtotal.toLocaleString("ar-EG")}{" "}
-                        <span className="text-xs">EGP</span>
+                        {itemSubtotal} <span className="text-xs">EGP</span>
                       </p>
                     </div>
                   </div>
@@ -179,8 +178,7 @@ export default function CartPageContent({
                 الإجمالي{" "}
               </span>
               <span className="font-mono font-bold">
-                {summary.subtotal.toLocaleString("ar-EG")}{" "}
-                <span className="text-[10px]">EGP</span>
+                {summary.subtotal} <span className="text-[10px]">EGP</span>
               </span>
             </div>
 
@@ -195,7 +193,7 @@ export default function CartPageContent({
               >
                 {summary.deliveryFee === 0
                   ? "FREE"
-                  : `${summary.deliveryFee.toLocaleString("ar-EG")} EGP`}
+                  : `${summary.deliveryFee} EGP`}
               </span>
             </div>
           </div>
@@ -204,9 +202,8 @@ export default function CartPageContent({
           {summary.deliveryFee > 0 && (
             <div className="p-4 bg-primary text-white mb-8">
               <p className="text-[10px] font-black uppercase tracking-widest leading-loose text-center">
-                أضف منتجات بقيمة{" "}
-                {summary.amountToFreeDelivery.toLocaleString("ar-EG")} EGP
-                للحصول على توصيل مجاني!
+                أضف منتجات بقيمة {summary.amountToFreeDelivery} EGP للحصول على
+                توصيل مجاني!
               </p>
             </div>
           )}
@@ -218,7 +215,7 @@ export default function CartPageContent({
               </span>
               <div className="text-left">
                 <span className="text-3xl font-black tracking-tighter leading-none block">
-                  {summary.finalTotal.toLocaleString("ar-EG")}
+                  {summary.finalTotal}
                 </span>
                 <span className="text-[10px] font-bold opacity-40 uppercase">
                   EGP (Incl. Tax)

@@ -2,8 +2,8 @@ import { FullCart } from "@/actions/cart-actions";
 
 export function calculateCheckoutPricing(cart: FullCart) {
   const subtotal = Math.round(cart.total);
-  const threshold = 2000;
-  const deliveryFee = subtotal >= threshold ? 0 : 150;
+  const threshold = 10000;
+  const deliveryFee = subtotal >= threshold ? 0 : 200;
   const discount = 0;
 
   return {

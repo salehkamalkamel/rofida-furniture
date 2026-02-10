@@ -45,6 +45,11 @@ export default async function InstantBuyPage({
       : Number(product.price);
   const quantity = Number(params.quantity) || 1;
   const basePrice = unitPrice * quantity;
+  const isCustomized = params.isCustomized === "true";
+
+  const customizationFee = isCustomized ? Math.round(basePrice * 0.1) : 0;
+  const shippingFee = basePrice + customizationFee > 10000 ? 0 : 200;
+  const total = basePrice + customizationFee + shippingFee; //I'll add shipping logic later
 
   return (
     <div className="min-h-screen bg-muted/5">
@@ -74,7 +79,7 @@ export default async function InstantBuyPage({
               الكمية: {quantity}
             </p>
             <p className="font-bold text-lg">
-              {basePrice.toLocaleString()} <span className="text-xs">EGP</span>
+              {basePrice} <span className="text-xs">EGP</span>
             </p>
           </div>
         </div>
@@ -85,6 +90,9 @@ export default async function InstantBuyPage({
 
         <div className="p-4">
           <InstantBuyForm
+            customizationFee={customizationFee}
+            shippingFee={shippingFee}
+            total={total}
             basePrice={basePrice}
             user={session?.user}
             savedAddresses={userAddresses}
@@ -93,7 +101,7 @@ export default async function InstantBuyPage({
               productId,
               quantity,
               color: params.color,
-              isCustomized: params.isCustomized === "true",
+              isCustomized: Boolean(params.isCustomized),
               customizationText: params.customizationText,
             }}
           />

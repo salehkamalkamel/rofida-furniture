@@ -35,17 +35,16 @@ export default function CheckoutSummary({
 
       {(pricing.amountToFreeShipping ?? 0) > 0 && (
         <div className="p-3 bg-primary text-white text-[10px] font-black uppercase tracking-tighter text-center">
-          أضف {pricing.amountToFreeShipping!.toLocaleString("ar-EG")} ج.م للشحن
-          المجاني
+          أضف {pricing.amountToFreeShipping} ج.م للشحن المجاني
         </div>
       )}
 
       <div className="pt-4 border-t-2 border-foreground">
         <div className="flex justify-between items-start">
-          <span className="text-lg font-black uppercase">Total</span>
+          <span className="text-lg font-black uppercase">الاجمالي</span>
           <div className="text-left">
             <span className="text-2xl font-black block leading-none">
-              {pricing.total.toLocaleString("ar-EG")}
+              {pricing.total}
             </span>
             <span className="text-[10px] font-bold opacity-40">
               EGP INCL. TAX
@@ -62,7 +61,7 @@ function PriceRow({ label, value, highlight, isFree }: any) {
     <div className="flex justify-between text-xs font-bold">
       <span className="opacity-60">{label}</span>
       <span className={highlight || isFree ? "text-primary" : ""}>
-        {isFree ? "FREE" : `${Math.abs(value).toLocaleString("ar-EG")} ج.م`}
+        {isFree ? "FREE" : `${Math.abs(value)} ج.م`}
       </span>
     </div>
   );

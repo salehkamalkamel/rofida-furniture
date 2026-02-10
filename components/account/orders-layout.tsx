@@ -8,7 +8,6 @@ import OrderCtrl from "@/components/order/order-ctrl";
 
 export default async function OrdersLayout() {
   const orders = await getMyOrders();
-  console.log(orders);
 
   if (orders.length === 0) {
     return (
@@ -96,7 +95,7 @@ export default async function OrdersLayout() {
                   إجمالي المستحق
                 </div>
                 <p className="text-xl font-black text-primary leading-none">
-                  {Number(order.totalAmount).toLocaleString("ar-EG")}{" "}
+                  {Number(order.totalAmount)}{" "}
                   <span className="text-[10px]">جنيه</span>
                 </p>
               </div>
@@ -134,7 +133,7 @@ export default async function OrdersLayout() {
                   </div>
                   <div className="text-left">
                     <p className="font-black text-sm font-mono">
-                      {Number(item.price).toLocaleString("ar-EG")}{" "}
+                      {Number(item.price)}{" "}
                       <span className="text-[9px]">EGP</span>
                     </p>
                   </div>

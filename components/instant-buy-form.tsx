@@ -38,6 +38,9 @@ type InstantBuyFormType = {
   user: UserType | undefined;
   savedAddresses: Address[] | [];
   shippingRules: ShippingRule[];
+  customizationFee: number;
+  shippingFee: number;
+  total: number;
   productData: {
     productId: number;
     quantity: number;
@@ -52,6 +55,9 @@ export function InstantBuyForm({
   user,
   savedAddresses,
   shippingRules,
+  customizationFee,
+  shippingFee,
+  total,
   productData,
 }: InstantBuyFormType) {
   const [isPending, startTransition] = useTransition();
@@ -291,13 +297,17 @@ export function InstantBuyForm({
       <div className="mt-8 border-t-2 border-foreground/20 border-dashed pt-4">
         <div className="flex justify-between text-xs text-muted-foreground mb-2">
           <span>الشحن ({selectedRule?.city})</span>
-          <span>{Number(selectedRule?.price).toLocaleString()} EGP</span>
+          <span>{Number(shippingFee)} EGP</span>
         </div>
+        {customizationFee > 0 && (
+          <div className="flex justify-between text-xs text-muted-foreground mb-2">
+            <span>{`اضافة تعديلات  10%`}</span>
+            <span>{Number(customizationFee)} EGP</span>
+          </div>
+        )}
         <div className="flex justify-between text-lg font-black">
           <span>الإجمالي</span>
-          <span className="text-primary">
-            {(basePrice + Number(selectedRule?.price)).toLocaleString()} EGP
-          </span>
+          <span className="text-primary">{total} EGP</span>
         </div>
       </div>
 
