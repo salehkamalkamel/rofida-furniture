@@ -11,7 +11,8 @@ import {
   orderItems,
   orders,
   products,
-  shippingRules, // Import this for type inference
+  shippingRules,
+  user, // Import this for type inference
   type CartItem, // Use 'type' keyword for clarity
 } from "@/db/schema";
 import { getAddressById } from "./address-actions";
@@ -206,13 +207,23 @@ export async function cancelOrder(orderId: number) {
     if (!session?.user) throw new Error("Unauthorized");
 
     const result = await db.transaction(async (tx) => {
+      // 1. Fetch order AND the associated user details
       const existingOrder = await tx.query.orders.findFirst({
         where: eq(orders.id, orderId),
+        with: {
+          user: true, // This pulls the customer data via the relationship
+        },
       });
 
       if (!existingOrder) throw new Error("Order not found");
-      if (existingOrder.userId !== session.user.id)
+
+      // Check permissions: Allow if it's the owner OR if an admin is doing it
+      const isOwner = existingOrder.userId === session.user.id;
+      const isAdmin = session.user.role === "admin";
+
+      if (!isOwner && !isAdmin) {
         throw new Error("Forbidden");
+      }
 
       if (existingOrder.status !== "pending") {
         throw new Error(
@@ -220,28 +231,37 @@ export async function cancelOrder(orderId: number) {
         );
       }
 
+      // 2. Update status
       await tx
         .update(orders)
         .set({ status: "cancelled", updatedAt: new Date() })
         .where(eq(orders.id, orderId));
 
-      const { data, error } = await resend.emails.send({
-        from: "contact@contact.rofida-furniture.com",
-        to: session.user.email,
-        subject: `تحديث بخصوص طلبك رقم #${orderId}`,
-        react: OrderStatusEmail({
-          username: session.user.name,
-          orderId: orderId,
-          status: "cancelled",
-        }),
-      });
-      if (error) {
-        console.error(error);
+      // 3. Send email to the customer (existingOrder.user)
+      if (existingOrder.user?.email) {
+        const { error } = await resend.emails.send({
+          from: "contact@contact.rofida-furniture.com",
+          to: existingOrder.user.email, // Targeted to customer
+          subject: `تم إلغاء طلبك رقم #${orderId}`,
+          react: OrderStatusEmail({
+            username: existingOrder.user.name, // Customer's name
+            orderId: orderId,
+            status: "cancelled",
+          }),
+        });
+
+        if (error) {
+          console.error("Email Error:", error);
+        }
       }
+
       return { success: true };
     });
 
     revalidatePath("/orders");
+    // Also revalidate admin side if an admin performed the action
+    revalidatePath("/admin/orders");
+
     return result;
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to cancel order" };
@@ -263,11 +283,12 @@ export async function updateOrderStatus(
   try {
     const session = await auth.api.getSession({ headers: await headers() });
 
+    // Ensure only admins can trigger this
     if (!session?.user || session.user.role !== "admin") {
       throw new Error("Unauthorized");
     }
 
-    // 1. Perform the update
+    // 1. Perform the update and return the order data
     const updatedOrder = await db
       .update(orders)
       .set({
@@ -281,18 +302,26 @@ export async function updateOrderStatus(
     if (updatedOrder.length > 0) {
       const order = updatedOrder[0];
 
-      const { data, error } = await resend.emails.send({
-        from: "contact@contact.rofida-furniture.com",
-        to: session.user.email,
-        subject: `تحديث بخصوص طلبك رقم #${orderId}`,
-        react: OrderStatusEmail({
-          username: session.user.name,
-          orderId: orderId,
-          status: newStatus,
-        }),
+      // 2. Fetch the customer who placed the order
+      const customer = await db.query.user.findFirst({
+        where: eq(user.id, order.userId),
       });
-      if (error) {
-        console.error(error);
+
+      if (customer && customer.email) {
+        const { data, error } = await resend.emails.send({
+          from: "contact@contact.rofida-furniture.com",
+          to: customer.email, // Use customer's email
+          subject: `تحديث بخصوص طلبك رقم #${orderId}`,
+          react: OrderStatusEmail({
+            username: customer.name, // Use customer's name
+            orderId: orderId,
+            status: newStatus,
+          }),
+        });
+
+        if (error) {
+          console.error("Email Error:", error);
+        }
       }
     }
 
