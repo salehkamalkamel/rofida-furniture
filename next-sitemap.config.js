@@ -1,8 +1,11 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: "https://www.rofida-furniture.com",
+  siteUrl: "https://rofida-furniture.com",
   generateRobotsTxt: true,
+  trailingSlash: false,
   sitemapSize: 5000,
+  changefreq: "weekly",
+  priority: 0.7,
 
   exclude: [
     "/auth/*",

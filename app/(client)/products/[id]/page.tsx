@@ -5,6 +5,8 @@ import db from "@/index";
 
 import type { Metadata } from "next";
 
+const BASE_URL = "https://rofida-furniture.com";
+
 export async function generateMetadata({
   params,
 }: {
@@ -21,14 +23,16 @@ export async function generateMetadata({
 
   return {
     title: `روفيدا للأثاث | ${product.name} – ${product.category} مودرن`,
-    description: `
-${product.name} من روفيدا للأثاث.
-تصميم عصري، جودة عالية، وإمكانية التعديل حسب الطلب.
-شحن لجميع محافظات مصر مع ضمان على جميع المنتجات.
-    `,
+    description: `${product.name} من روفيدا للأثاث. تصميم عصري، جودة عالية، وإمكانية التعديل حسب الطلب. شحن لجميع محافظات مصر مع ضمان.`,
+
+    alternates: {
+      canonical: `${BASE_URL}/products/${product.id}`,
+    },
+
     openGraph: {
+      url: `${BASE_URL}/products/${product.id}`,
       title: product.name,
-      description: `أثاث مودرن قابل للتخصيص – شحن سريع داخل مصر`,
+      description: "أثاث مودرن قابل للتخصيص – شحن سريع داخل مصر",
       images: product.images
         ? [
             {
@@ -68,10 +72,11 @@ export default async function ProductDetailPage({
       "@type": "Offer",
       price: product.price,
       priceCurrency: "EGP",
-      availability: true
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-      url: `https://rofida-furniture.vercel.app/products/${product.id}`,
+      availability:
+        product.stockStatus !== "out_of_stock"
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      url: `${BASE_URL}/products/${product.id}`,
     },
   };
 
