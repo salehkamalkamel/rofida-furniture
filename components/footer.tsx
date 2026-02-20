@@ -118,10 +118,22 @@ export default function Footer() {
                 <span className="block text-[10px] opacity-40 uppercase mb-1">
                   Contact
                 </span>
-                <span className="text-sm font-bold block">
-                  +20 123 456 7890
-                </span>
-                <span className="text-sm font-bold block">info@dar.com</span>
+
+                <a
+                  href="https://wa.me/201096621398"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-bold block hover:underline"
+                >
+                  +201096621398
+                </a>
+
+                <a
+                  href="mailto:contact@contact.rofida-furniture.com"
+                  className="text-sm font-bold block hover:underline"
+                >
+                  contact@contact.rofida-furniture.com
+                </a>
               </div>
               <div className="flex gap-4 pt-4">
                 <Instagram className="w-5 h-5 hover:text-primary cursor-pointer" />
