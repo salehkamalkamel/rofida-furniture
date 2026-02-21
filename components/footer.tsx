@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Instagram, Facebook, Twitter, ArrowUpLeft } from "lucide-react";
+import { Instagram, Facebook, ArrowUpLeft, Mail } from "lucide-react";
 import { navList } from "@/lib/data/header-data";
 
 export default function Footer() {
@@ -136,9 +136,16 @@ export default function Footer() {
                 </a>
               </div>
               <div className="flex gap-4 pt-4">
-                <Instagram className="w-5 h-5 hover:text-primary cursor-pointer" />
-                <Facebook className="w-5 h-5 hover:text-primary cursor-pointer" />
-                <Twitter className="w-5 h-5 hover:text-primary cursor-pointer" />
+                <Link
+                  href="https://www.facebook.com/profile.php?id=615882138802259"
+                  target="_blank"
+                >
+                  <Facebook className="w-5 h-5 hover:text-primary cursor-pointer" />
+                </Link>
+                {/* Email Icon */}
+                <Link href="mailto:contact@contact.rofida-furniture.com">
+                  <Mail className="w-5 h-5 hover:text-primary cursor-pointer" />
+                </Link>
               </div>
             </div>
           </div>
