@@ -6,7 +6,7 @@ Disallow: /api
 Disallow: /dashboard
 
 # Host
-Host: https://rofida-furniture.vercel.app
+Host: https://rofida-furniture.com
 
 # Sitemaps
-Sitemap: https://rofida-furniture.vercel.app/sitemap.xml
+Sitemap: https://rofida-furniture.com/sitemap.xml

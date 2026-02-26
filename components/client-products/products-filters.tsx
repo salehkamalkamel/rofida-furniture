@@ -1,9 +1,9 @@
 "use client";
 
 import { categories } from "@/lib/data";
-import { Loader2, Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 export default function ClientProductsFilters({
@@ -14,7 +14,6 @@ export default function ClientProductsFilters({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
-  const [isPending, startTransition] = useTransition();
 
   const [query, setQuery] = useState(
     searchParams.get("search")?.toString() || "",
@@ -32,9 +31,7 @@ export default function ClientProductsFilters({
 
       if (key !== "page") params.delete("page");
 
-      startTransition(() => {
-        replace(`${pathname}?${params.toString()}`, { scroll: false });
-      });
+      replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [searchParams, pathname, replace],
   );
@@ -45,9 +42,7 @@ export default function ClientProductsFilters({
 
   const clearFilters = () => {
     setQuery("");
-    startTransition(() => {
-      replace(pathname, { scroll: false });
-    });
+    replace(pathname, { scroll: false });
   };
 
   const categoryOptions = useMemo(
@@ -78,10 +73,12 @@ export default function ClientProductsFilters({
           <div className="flex flex-col sm:flex-row items-stretch gap-0 flex-1 max-w-3xl">
             <div className="relative flex-1 group">
               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground group-focus-within:text-primary transition-colors">
-                {isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                {query ? (
+                  <button onClick={clearFilters}>
+                    <X className="w-4 h-4 cursor-pointer" />
+                  </button>
                 ) : (
-                  <Search className="w-5 h-5" strokeWidth={2.5} />
+                  <Search className="w-4 h-4" />
                 )}
               </div>
               <input
@@ -115,7 +112,7 @@ export default function ClientProductsFilters({
             {(query || currentCategory !== "all") && (
               <button
                 onClick={clearFilters}
-                className="h-14 px-6 bg-destructive text-white flex items-center justify-center hover:opacity-90 transition-all font-bold uppercase text-xs"
+                className="cursor-pointer h-14 px-6 bg-destructive text-white flex items-center justify-center hover:opacity-90 transition-all font-bold uppercase text-xs"
               >
                 <X className="w-5 h-5" strokeWidth={3} />
               </button>

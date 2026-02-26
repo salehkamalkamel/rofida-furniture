@@ -1,23 +1,44 @@
+"use client";
 import ProductCard from "@/components/client-product/product-card";
 import ClientProductsFilters from "./products-filters";
 import NoProductsMatch from "./no-products-match";
 import { Product } from "@/db/schema";
 import { LayoutGrid, Database } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 
 export default function ProductsContent({ products }: { products: Product[] }) {
+  const searchParams = useSearchParams();
+
+  const query = searchParams.get("search") || "";
+  const category = searchParams.get("category") || "all";
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesSearch = product.name
+        .toLowerCase()
+        .includes(query.toLowerCase());
+
+      const matchesCategory =
+        category === "all" || product.category === category;
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, query, category]);
+
   return (
     <main className="flex-1 bg-background" dir="rtl">
       {/* Sticky Filter Bar with Industrial Border */}
       <div className="sticky top-0 z-30 border-b-2 border-foreground bg-background/95 backdrop-blur-md">
-        <ClientProductsFilters productsLength={products.length || 0} />
+        <ClientProductsFilters productsLength={filteredProducts.length || 0} />
       </div>
 
       {/* --- Products Grid Container --- */}
       <div className="max-w-450 mx-auto min-h-screen">
         <div className="transition-all duration-500">
-          {products.length > 0 ? (
+          {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 md:gap-px p-2 md:p-4">
-              {products.map((product, index) => (
+              {filteredProducts.map((product, index) => (
                 <div
                   key={product.id}
                   className="bg-background group relative p-0 md:p-4 hover:z-10 transition-all duration-300"
@@ -50,7 +71,7 @@ export default function ProductsContent({ products }: { products: Product[] }) {
           <div className="flex items-center gap-4">
             <LayoutGrid className="w-4 h-4" />
             <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
-              نهاية الكتالوج / مجموعة 2026
+              نهاية المنتجات / مجموعة 2026
             </div>
           </div>
 
