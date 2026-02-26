@@ -160,10 +160,10 @@ export default function Footer() {
 
             <div className="flex gap-8">
               <Link
-                href="#"
+                href="/return-policy"
                 className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
               >
-                Privacy Policy
+                Return Policy
               </Link>
               <Link
                 href="#"
