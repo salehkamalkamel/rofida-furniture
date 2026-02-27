@@ -65,8 +65,7 @@ export default function RootLayout({
       >
         {children}
         <Analytics />
-        /* Vercel Speed Insights component for performance monitoring and
-        optimization * /
+
         <SpeedInsights />
         <Toaster />
       </body>
